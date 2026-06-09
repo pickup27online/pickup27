@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo — Pick-Up 27</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header-secundario">
+            <a href="index.html" class="btn-back">⬅️ Atrás</a>
+            <h2>📦 Catálogo</h2>
+            <a href="carrito.html" class="btn-carrito">🛒 Carrito</a>
+        </header>
+
+        <div id="categorias" class="categorias">
+            <!-- Se llena con JavaScript -->
+        </div>
+
+        <div id="productos" class="productos">
+            <!-- Se llena con JavaScript -->
+        </div>
+
+        <div class="navegacion">
+            <a href="index.html" class="btn-secondary">⬅️ Volver al inicio</a>
+            <a href="carrito.html" class="btn-primary">🛒 Ver carrito</a>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            mostrarCategorias();
+            mostrarProductos('🍚 Mercado');
+        });
+
+        document.querySelectorAll('.btn-categoria').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const categoria = e.target.dataset.categoria;
+                mostrarProductos(categoria);
+            });
+        });
+    </script>
+</body>
+</html>

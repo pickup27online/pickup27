@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carrito — Pick-Up 27</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header-secundario">
+            <a href="catalogo.html" class="btn-back">⬅️ Atrás</a>
+            <h2>🛒 Tu Carrito</h2>
+            <span></span>
+        </header>
+
+        <div id="carrito-contenido" class="carrito-contenido">
+            <!-- Se llena con JavaScript -->
+        </div>
+
+        <div id="resumen-carrito" class="resumen-carrito">
+            <div class="total-precio">
+                <span>Total:</span>
+                <span id="total">0 CUP</span>
+            </div>
+        </div>
+
+        <div class="navegacion">
+            <a href="catalogo.html" class="btn-secondary">⬅️ Seguir comprando</a>
+            <button id="btn-confirmar" class="btn-primary">✅ Confirmar pedido</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            mostrarCarrito();
+        });
+
+        document.getElementById('btn-confirmar').addEventListener('click', () => {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || {};
+            if (Object.keys(carrito).length === 0) {
+                alert('Tu carrito está vacío');
+                return;
+            }
+            window.location.href = 'confirmacion.html';
+        });
+    </script>
+</body>
+</html>

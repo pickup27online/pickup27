@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación — Pick-Up 27</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header-secundario">
+            <a href="carrito.html" class="btn-back">⬅️ Atrás</a>
+            <h2>✅ Confirmación</h2>
+            <span></span>
+        </header>
+
+        <section class="seccion-confirmacion">
+            <h3>Resumen de tu pedido</h3>
+            <div id="resumen-pedido" class="resumen-pedido">
+                <!-- Se llena con JavaScript -->
+            </div>
+            
+            <div class="total-pedido">
+                <span>Total a pagar:</span>
+                <span id="total-pedido">0 CUP</span>
+            </div>
+
+            <p class="info-pedido">
+                💰 <strong>El pago se realiza al momento de la recogida en Pick-Up 27</strong>
+            </p>
+        </section>
+
+        <div class="navegacion">
+            <a href="carrito.html" class="btn-secondary">⬅️ Volver al carrito</a>
+            <button id="btn-enviar" class="btn-primary">📤 Enviar pedido a Telegram</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            mostrarResumenPedido();
+        });
+
+        document.getElementById('btn-enviar').addEventListener('click', () => {
+            const carrito = JSON.parse(localStorage.getItem('carrito')) || {};
+            if (Object.keys(carrito).length === 0) {
+                alert('Tu carrito está vacío');
+                return;
+            }
+            // Aquí se conectará con el bot de Telegram
+            enviarPedidoATelegram(carrito);
+        });
+    </script>
+</body>
+</html>
