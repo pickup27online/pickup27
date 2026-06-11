@@ -30,6 +30,7 @@
             background: var(--gris-fondo);
             min-height: 100vh;
             color: #1e293b;
+            visibility: hidden; /* Se muestra tras cargar config */
         }
 
         /* ============================================================
@@ -524,8 +525,79 @@
         }
 
         /* ============================================================
-           BARRA DE ACCIONES (sticky bottom)
+           MODAL DE CONFIRMACIÓN
         ============================================================ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal {
+            background: white;
+            border-radius: var(--radio);
+            padding: 24px 20px;
+            width: 100%;
+            max-width: 340px;
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+            transform: translateY(20px);
+            transition: transform 0.25s;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: translateY(0);
+        }
+
+        .modal-icono {
+            font-size: 36px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+
+        .modal-titulo {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--azul);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .modal-detalle {
+            font-size: 14px;
+            color: var(--gris-texto);
+            text-align: center;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .modal-detalle strong {
+            color: #1e293b;
+        }
+
+        .modal-botones {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-botones .btn-primary,
+        .modal-botones .btn-secondary {
+            flex: 1;
+            padding: 12px;
+            font-size: 14px;
+        }
         .acciones {
             position: sticky;
             bottom: 0;
@@ -586,6 +658,19 @@
     </style>
 </head>
 <body>
+
+<!-- MODAL CONFIRMAR AGREGAR -->
+<div class="modal-overlay" id="modal-agregar">
+    <div class="modal">
+        <div class="modal-icono">🛒</div>
+        <div class="modal-titulo">¿Agregar al carrito?</div>
+        <div class="modal-detalle" id="modal-detalle"></div>
+        <div class="modal-botones">
+            <button class="btn-secondary" onclick="cerrarModal()">✖ Rechazar</button>
+            <button class="btn-primary" onclick="confirmarAgregar()">✔ Confirmar</button>
+        </div>
+    </div>
+</div>
 
 <!-- HEADER -->
 <header class="header" id="header">
@@ -849,6 +934,17 @@ async function cargarCatalogo() {
 let historial = ['inicio'];
 
 function irA(seccion) {
+    // Bloquear navegación si tienda cerrada o en mantenimiento
+    // (excepto para ir a esas mismas secciones)
+    const seccionesLibres = ['cerrada', 'mantenimiento', 'inicio'];
+    if (!CONFIG.tienda_abierta && !seccionesLibres.includes(seccion)) {
+        document.getElementById('msg-cerrada').textContent = CONFIG.mensaje_cierre;
+        seccion = 'cerrada';
+    } else if (CONFIG.mantenimiento && !seccionesLibres.includes(seccion)) {
+        document.getElementById('msg-mantenimiento').textContent = CONFIG.mensaje_mantenimiento;
+        seccion = 'mantenimiento';
+    }
+
     // Ocultar todas
     document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
     // Mostrar la pedida
@@ -870,6 +966,8 @@ function irA(seccion) {
 function irAtras() {
     historial.pop();
     const anterior = historial[historial.length - 1] || 'inicio';
+    // Si volvemos al catálogo, limpiar categoría activa
+    if (anterior === 'catalogo') categoriaActiva = null;
     irA(anterior);
 }
 
@@ -881,11 +979,21 @@ function actualizarHeader(seccion) {
         confirmacion: 'Confirmar pedido',
         enviado: 'Pedido enviado',
         'enviado-confirmado': 'Pedido confirmado',
-        'enviado-rechazado': 'Pedido rechazado'
+        'enviado-rechazado': 'Pedido rechazado',
+        cerrada: 'Tienda cerrada',
+        mantenimiento: 'En mantenimiento'
     };
     document.getElementById('header-sub').textContent = subtitulos[seccion] || 'Online Shop';
-    document.getElementById('btn-back-header').style.display = seccion !== 'inicio' ? 'block' : 'none';
-    document.getElementById('btn-header-carrito').style.display = seccion !== 'inicio' && seccion !== 'enviado' ? 'inline-flex' : 'none';
+
+    // Ocultar botones en secciones bloqueadas
+    const bloqueada = seccion === 'cerrada' || seccion === 'mantenimiento';
+    document.getElementById('btn-back-header').style.display =
+        (!bloqueada && seccion !== 'inicio') ? 'block' : 'none';
+    document.getElementById('btn-header-carrito').style.display =
+        (!bloqueada && seccion !== 'inicio' && seccion !== 'enviado' &&
+         seccion !== 'enviado-confirmado' && seccion !== 'enviado-rechazado')
+        ? 'inline-flex' : 'none';
+
     actualizarBadge();
 }
 
@@ -1019,11 +1127,15 @@ function toast(msg) {
 // ============================================================
 // RENDER: CATÁLOGO
 // ============================================================
-let categoriaActiva = Object.keys(CATALOGO)[0];
+let categoriaActiva = null; // null = mostrar solo categorías
 
 function renderCatalogo() {
     renderCategorias();
-    renderProductos(categoriaActiva);
+    if (categoriaActiva) {
+        renderProductos(categoriaActiva);
+    } else {
+        document.getElementById('productos-container').innerHTML = '';
+    }
 }
 
 function renderCategorias() {
@@ -1053,7 +1165,7 @@ function renderProductos(categoria) {
                 <div class="producto-nombre">${p.nombre}</div>
                 <div class="producto-precio">${p.precio} CUP</div>
                 <div class="producto-stock ${agotado ? 'agotado' : 'disponible'}">
-                    ${agotado ? '⛔ Agotado' : `✅ Disponible`}
+                    ${agotado ? '⛔ Agotado' : '✅ Disponible'}
                 </div>
             </div>
             <div class="producto-controles">
@@ -1077,16 +1189,50 @@ function cambiarCant(id, delta) {
     el.textContent = Math.max(1, Math.min(99, v));
 }
 
+// ============================================================
+// MODAL DE CONFIRMACIÓN AGREGAR
+// ============================================================
+let _pendienteId = null;
+let _pendienteCant = null;
+
 function onAgregar(id) {
     const cant = parseInt(document.getElementById(`cant-${id}`).textContent);
-    agregarItem(id, cant);
-    document.getElementById(`cant-${id}`).textContent = '1';
+    const producto = buscarProducto(id);
+    if (!producto) return;
+
+    _pendienteId = id;
+    _pendienteCant = cant;
+
+    document.getElementById('modal-detalle').innerHTML =
+        `<strong>${producto.nombre}</strong><br>Cantidad: ${cant} unidad${cant > 1 ? 'es' : ''}`;
+    document.getElementById('modal-agregar').classList.add('visible');
+}
+
+function confirmarAgregar() {
+    if (!_pendienteId) return;
+    agregarItem(_pendienteId, _pendienteCant);
+    document.getElementById(`cant-${_pendienteId}`).textContent = '1';
+    cerrarModal();
     toast('✅ Agregado correctamente al carrito');
+    _pendienteId = null;
+    _pendienteCant = null;
+}
+
+function cerrarModal() {
+    document.getElementById('modal-agregar').classList.remove('visible');
 }
 
 // ============================================================
 // RENDER: CARRITO
 // ============================================================
+function cambiarCantCarrito(id, delta) {
+    const carrito = obtenerCarrito();
+    if (!carrito[id]) return;
+    carrito[id].cantidad = Math.max(1, Math.min(99, carrito[id].cantidad + delta));
+    guardarCarrito(carrito);
+    renderCarrito();
+}
+
 function renderCarrito() {
     const carrito = obtenerCarrito();
     const cont = document.getElementById('carrito-container');
@@ -1110,10 +1256,15 @@ function renderCarrito() {
         div.innerHTML = `
             <div style="flex:1">
                 <div class="item-nombre">${item.nombre}</div>
-                <div class="item-detalle">${item.cantidad} x ${item.precio} CUP</div>
+                <div class="item-detalle">${item.precio} CUP c/u</div>
             </div>
-            <div class="item-subtotal">${subtotal} CUP</div>
-            <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑</button>
+            <div class="cantidad-controles" style="margin:0 8px">
+                <button class="btn-cant" onclick="cambiarCantCarrito('${id}', -1)">−</button>
+                <span class="cant-valor">${item.cantidad}</span>
+                <button class="btn-cant" onclick="cambiarCantCarrito('${id}', 1)">+</button>
+            </div>
+            <div class="item-subtotal" style="margin-right:8px">${subtotal} CUP</div>
+            <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑 Vaciar</button>
         `;
         cont.appendChild(div);
     });
@@ -1197,6 +1348,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Cargar configuración primero
     await cargarConfig();
+
+    // Mostrar la página ahora que tenemos la config
+    document.body.style.visibility = 'visible';
 
     // Verificar estado de la tienda
     if (!CONFIG.tienda_abierta) {
