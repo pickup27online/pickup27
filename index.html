@@ -686,6 +686,32 @@
 </div>
 
 <!-- ============================================================
+     SECCIÓN: TIENDA CERRADA
+============================================================ -->
+<div class="seccion" id="sec-cerrada">
+    <div class="main">
+        <div class="enviado-centro">
+            <div class="enviado-icono">🔴</div>
+            <div class="enviado-titulo" style="color:var(--rojo)">Tienda cerrada</div>
+            <p class="enviado-texto" id="msg-cerrada"></p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     SECCIÓN: MANTENIMIENTO
+============================================================ -->
+<div class="seccion" id="sec-mantenimiento">
+    <div class="main">
+        <div class="enviado-centro">
+            <div class="enviado-icono">🔧</div>
+            <div class="enviado-titulo" style="color:var(--azul)">En mantenimiento</div>
+            <p class="enviado-texto" id="msg-mantenimiento"></p>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
      SECCIÓN: PEDIDO ENVIADO (esperando confirmación)
 ============================================================ -->
 <div class="seccion" id="sec-enviado">
@@ -745,15 +771,50 @@
 // ============================================================
 const SHEET_ID = '1nHFiiKWmZ4hNAZUCKCjh9qg5SSmFL271-xTJzRvsCGw';
 const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`;
+const CONFIG_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=1291093152`;
 
 // Catálogo en memoria (se llena desde Google Sheets)
 let CATALOGO = {};
+
+// Config en memoria
+let CONFIG = {
+    tienda_abierta: true,
+    mantenimiento: false,
+    mensaje_cierre: 'La tienda está cerrada por el momento. Vuelve pronto.',
+    mensaje_mantenimiento: 'Pick-Up 27 está en mantenimiento. Volvemos pronto.'
+};
+
+async function cargarConfig() {
+    try {
+        const res = await fetch(CONFIG_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const filas = json.table.rows;
+
+        filas.forEach(fila => {
+            const cols = fila.c;
+            if (!cols || !cols[0]) return;
+            const clave = cols[0]?.v?.toString().trim();
+            const valor = cols[1]?.v?.toString().trim();
+            if (!clave || clave.toLowerCase() === 'clave') return;
+
+            if (clave === 'tienda_abierta') CONFIG.tienda_abierta = valor === 'true';
+            if (clave === 'mantenimiento') CONFIG.mantenimiento = valor === 'true';
+            if (clave === 'mensaje_cierre') CONFIG.mensaje_cierre = valor;
+            if (clave === 'mensaje_mantenimiento') CONFIG.mensaje_mantenimiento = valor;
+        });
+
+        return true;
+    } catch (error) {
+        console.error('Error cargando config:', error);
+        return false;
+    }
+}
 
 async function cargarCatalogo() {
     try {
         const res = await fetch(SHEET_URL);
         const text = await res.text();
-        // Google devuelve JSONP — extraemos el JSON puro
         const json = JSON.parse(text.substring(47).slice(0, -2));
         const filas = json.table.rows;
 
@@ -763,13 +824,12 @@ async function cargarCatalogo() {
             const cols = fila.c;
             if (!cols || !cols[0]) return;
 
-            const id       = cols[0]?.v?.toString().trim() || '';
-            const nombre   = cols[1]?.v?.toString().trim() || '';
-            const precio   = parseInt(cols[2]?.v) || 0;
-            const stock    = parseInt(cols[3]?.v) || 0;
+            const id        = cols[0]?.v?.toString().trim() || '';
+            const nombre    = cols[1]?.v?.toString().trim() || '';
+            const precio    = parseInt(cols[2]?.v) || 0;
+            const stock     = parseInt(cols[3]?.v) || 0;
             const categoria = cols[4]?.v?.toString().trim() || 'General';
 
-            // Saltar fila de títulos
             if (id.toLowerCase() === 'id') return;
 
             if (!CATALOGO[categoria]) CATALOGO[categoria] = [];
@@ -1134,13 +1194,29 @@ async function enviarPedido() {
 // INICIALIZAR
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
-    // Mostrar indicador de carga
+
+    // Cargar configuración primero
+    await cargarConfig();
+
+    // Verificar estado de la tienda
+    if (!CONFIG.tienda_abierta) {
+        document.getElementById('msg-cerrada').textContent = CONFIG.mensaje_cierre;
+        irA('cerrada');
+        return;
+    }
+
+    if (CONFIG.mantenimiento) {
+        document.getElementById('msg-mantenimiento').textContent = CONFIG.mensaje_mantenimiento;
+        irA('mantenimiento');
+        return;
+    }
+
+    // Tienda abierta — cargar catálogo
     document.getElementById('productos-container').innerHTML = `
         <div style="text-align:center;padding:40px;color:var(--gris-texto)">
             ⏳ Cargando productos...
         </div>`;
 
-    // Cargar catálogo desde Google Sheets
     const ok = await cargarCatalogo();
 
     if (!ok || Object.keys(CATALOGO).length === 0) {
