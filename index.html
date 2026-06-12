@@ -34,10 +34,33 @@
         }
 
         /* ============================================================
-           SECCIONES — mostrar/ocultar
+           TRANSICIONES DE PÁGINA
         ============================================================ */
         .seccion { display: none; }
-        .seccion.activa { display: block; }
+        .seccion.activa {
+            display: block;
+            animation: fadeSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           TÍTULO WATERMARK — CATEGORÍAS
+        ============================================================ */
+        .catalogo-titulo-fondo {
+            font-size: 42px;
+            font-weight: 900;
+            color: var(--azul);
+            opacity: 0.07;
+            letter-spacing: -1px;
+            margin-bottom: -10px;
+            margin-top: 4px;
+            user-select: none;
+            pointer-events: none;
+        }
 
         /* ============================================================
            HEADER
@@ -893,6 +916,7 @@
 ============================================================ -->
 <div class="seccion" id="sec-catalogo">
     <div class="main">
+        <div class="catalogo-titulo-fondo">Categorías</div>
         <div id="categorias-container" class="categorias"></div>
         <div id="productos-container" class="productos-grid"></div>
     </div>
@@ -1184,11 +1208,11 @@ async function cargarCatalogo() {
 
 // ============================================================
 // SINCRONIZACIÓN EN TIEMPO REAL
-// Se dispara silenciosamente en cada interacción del usuario.
-// Throttle de 4s. Config y catálogo se cargan en paralelo.
+// Se dispara en cada click de botón (excepto +/−).
+// Throttle de 1s. Config y catálogo en paralelo.
 // ============================================================
 let _ultimaSincro = 0;
-const SINCRO_THROTTLE_MS = 4_000;
+const SINCRO_THROTTLE_MS = 1_000;
 
 async function sincronizar() {
     const ahora = Date.now();
@@ -1232,9 +1256,9 @@ async function sincronizar() {
     if (seccionActual === 'confirmacion') renderConfirmacion();
 }
 
-// Listener global: se dispara en cualquier click de botón, sin bloquear la UI
+// Listener global: excluye btn-cant para no interferir con hold/repetición
 document.addEventListener('click', e => {
-    if (e.target.closest('button')) sincronizar();
+    if (e.target.closest('button') && !e.target.closest('.btn-cant')) sincronizar();
 }, { passive: true, capture: false });
 
 // ============================================================
@@ -1432,32 +1456,48 @@ function recibirRespuestaAdmin(confirmado) {
 // ============================================================
 (function () {
     // Tiempos de repetición: empieza lento, acelera
-    const DELAY_INICIAL   = 500;  // ms antes de empezar a repetir
-    const INTERVALO_INI   = 200;  // ms primer intervalo
-    const INTERVALO_MED   = 80;   // ms después de 1s
-    const INTERVALO_RAP   = 30;   // ms después de 2s
+    const DELAY_INICIAL = 500;  // ms antes de empezar a repetir
+    const INTERVALO_INI = 200;  // ms primer intervalo
+    const INTERVALO_MED = 80;   // ms después de 1s
+    const INTERVALO_RAP = 30;   // ms después de 2s
 
-    let _holdBtn    = null;
-    let _holdTimer  = null;
-    let _holdStart  = 0;
+    let _holdBtn   = null;
+    let _holdTimer = null;
+    let _holdStart = 0;
 
-    function getIntervaloPorTiempo() {
+    function getIntervalo() {
         const elapsed = Date.now() - _holdStart;
         if (elapsed > 2000) return INTERVALO_RAP;
         if (elapsed > 1000) return INTERVALO_MED;
         return INTERVALO_INI;
     }
 
-    function dispararAccion(btn) {
-        btn.click();
+    // Llama directamente a la función JS, sin pasar por btn.click()
+    // así evitamos que el evento se propague y dispare re-renders del DOM
+    function ejecutarAccion(btn) {
+        const onclick = btn.getAttribute('onclick') || '';
+        // Extraer nombre de función y argumentos del onclick: fn('id', delta)
+        const match = onclick.match(/^(\w+)\((.+)\)$/);
+        if (!match) return;
+        const fn = window[match[1]];
+        if (typeof fn !== 'function') return;
+        // Parsear argumentos: strings con comillas y números
+        const args = match[2].split(',').map(a => {
+            const trimmed = a.trim();
+            if (trimmed.startsWith("'") || trimmed.startsWith('"')) {
+                return trimmed.slice(1, -1);
+            }
+            return Number(trimmed);
+        });
+        fn(...args);
     }
 
     function iniciarRepeticion(btn) {
         _holdStart = Date.now();
         _holdTimer = setTimeout(function repetir() {
             if (!_holdBtn) return;
-            dispararAccion(_holdBtn);
-            _holdTimer = setTimeout(repetir, getIntervaloPorTiempo());
+            ejecutarAccion(_holdBtn);
+            _holdTimer = setTimeout(repetir, getIntervalo());
         }, DELAY_INICIAL);
     }
 
@@ -1473,29 +1513,21 @@ function recibirRespuestaAdmin(confirmado) {
         iniciarRepeticion(btn);
     }
 
-    function soltar(btn) {
-        if (btn) btn.classList.remove('pressed');
+    function soltar() {
+        if (_holdBtn) _holdBtn.classList.remove('pressed');
         _holdBtn = null;
         detenerRepeticion();
     }
 
-    // Delegación de eventos en document para cubrir botones generados dinámicamente
     document.addEventListener('pointerdown', e => {
         const btn = e.target.closest('.btn-cant');
         if (btn) { e.preventDefault(); presionar(btn); }
     }, { passive: false });
 
-    document.addEventListener('pointerup', e => {
-        const btn = e.target.closest('.btn-cant');
-        soltar(btn || _holdBtn);
-    }, true);
-
-    document.addEventListener('pointercancel', e => {
-        soltar(_holdBtn);
-    }, true);
-
+    document.addEventListener('pointerup',     () => soltar(), true);
+    document.addEventListener('pointercancel', () => soltar(), true);
     document.addEventListener('pointerleave', e => {
-        if (_holdBtn && e.target === _holdBtn) soltar(_holdBtn);
+        if (_holdBtn && e.target === _holdBtn) soltar();
     }, true);
 })();
 
@@ -1584,9 +1616,11 @@ function renderProductos(categoria) {
 
 function cambiarCant(id, delta) {
     const el = document.getElementById(`cant-${id}`);
+    if (!el) return;
     const producto = buscarProducto(id);
     const maxStock = producto ? producto.stock : 99;
-    let v = parseInt(el.textContent) + delta;
+    const actual = parseInt(el.textContent, 10);
+    const v = isNaN(actual) ? 1 : actual + delta;
     el.textContent = Math.max(1, Math.min(maxStock, v));
 }
 
@@ -1631,9 +1665,19 @@ function cambiarCantCarrito(id, delta) {
     if (!carrito[id]) return;
     const producto = buscarProducto(id);
     const maxStock = producto ? producto.stock : 99;
-    carrito[id].cantidad = Math.max(1, Math.min(maxStock, carrito[id].cantidad + delta));
+    const actual = typeof carrito[id].cantidad === 'number' ? carrito[id].cantidad : parseInt(carrito[id].cantidad, 10) || 1;
+    carrito[id].cantidad = Math.max(1, Math.min(maxStock, actual + delta));
     guardarCarrito(carrito);
-    renderCarrito();
+    // Actualizar solo el span de cantidad y subtotal, sin re-renderizar todo el carrito
+    // para no destruir el DOM durante un hold
+    const spans = document.querySelectorAll(`[data-carrito-id="${id}"]`);
+    spans.forEach(el => {
+        if (el.dataset.tipo === 'cant') el.textContent = carrito[id].cantidad;
+        if (el.dataset.tipo === 'subtotal') el.textContent = `${carrito[id].precio * carrito[id].cantidad} CUP`;
+    });
+    // Actualizar total
+    const totalEl = document.querySelector('.total-valor');
+    if (totalEl) totalEl.textContent = `${obtenerTotal()} CUP`;
 }
 
 function renderCarrito() {
@@ -1663,10 +1707,10 @@ function renderCarrito() {
             </div>
             <div class="cantidad-controles" style="margin:0 8px">
                 <button class="btn-cant" onclick="cambiarCantCarrito('${id}', -1)">−</button>
-                <span class="cant-valor">${item.cantidad}</span>
+                <span class="cant-valor" data-carrito-id="${id}" data-tipo="cant">${item.cantidad}</span>
                 <button class="btn-cant" onclick="cambiarCantCarrito('${id}', 1)">+</button>
             </div>
-            <div class="item-subtotal" style="margin-right:8px">${subtotal} CUP</div>
+            <div class="item-subtotal" style="margin-right:8px" data-carrito-id="${id}" data-tipo="subtotal">${subtotal} CUP</div>
             <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑 Vaciar</button>
         `;
         cont.appendChild(div);
