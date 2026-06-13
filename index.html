@@ -30,7 +30,8 @@
             background: var(--gris-fondo);
             min-height: 100vh;
             color: #1e293b;
-            visibility: hidden; /* Se muestra tras cargar config */
+            opacity: 0; /* Invisible hasta que irA() posicione la sección correcta */
+            transition: opacity 0.18s ease;
         }
 
         /* ============================================================
@@ -317,43 +318,46 @@
         .cantidad-controles {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             background: var(--gris-fondo);
             border-radius: var(--radio-sm);
             padding: 5px 10px;
         }
 
         .cant-valor {
-            min-width: 28px;
+            min-width: 30px;
             text-align: center;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 16px;
         }
 
         /* ============================================================
            ANIMACIÓN PRODUCTOS AL DESPLEGAR CATEGORÍA
+           Solo se activa cuando el contenedor tiene la clase .animando
         ============================================================ */
         @keyframes cardEntrada {
             from { opacity: 0; transform: translateY(10px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        .producto-card {
-            animation: cardEntrada 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-        }
+        #productos-container.animando .producto-card { animation: cardEntrada 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
+        #productos-container.animando .producto-card:nth-child(2) { animation-delay: 0.04s; }
+        #productos-container.animando .producto-card:nth-child(3) { animation-delay: 0.08s; }
+        #productos-container.animando .producto-card:nth-child(4) { animation-delay: 0.12s; }
+        #productos-container.animando .producto-card:nth-child(5) { animation-delay: 0.16s; }
+        #productos-container.animando .producto-card:nth-child(n+6) { animation-delay: 0.20s; }
 
-        .producto-card:nth-child(2) { animation-delay: 0.04s; }
-        .producto-card:nth-child(3) { animation-delay: 0.08s; }
-        .producto-card:nth-child(4) { animation-delay: 0.12s; }
-        .producto-card:nth-child(5) { animation-delay: 0.16s; }
-        .producto-card:nth-child(n+6) { animation-delay: 0.20s; }
+        /* ============================================================
+           BOTONES CANTIDAD +/−
+        ============================================================ */
+        .btn-cant {
             background: white;
-            border: 1px solid var(--gris-borde);
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
+            border: 1.5px solid var(--gris-borde);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 700;
             color: var(--azul);
             display: flex;
@@ -365,10 +369,10 @@
             user-select: none;
             -webkit-user-select: none;
             touch-action: manipulation;
+            flex-shrink: 0;
         }
 
-        /* El estado "presionado" se maneja 100% por JS con la clase .pressed
-           para evitar que :active se quede pegado en Android */
+        /* Estado presionado manejado 100% por JS para evitar que :active quede pegado en Android */
         .btn-cant.pressed { background: var(--azul-claro); color: white; border-color: var(--azul-claro); }
         .btn-cant:disabled { opacity: 0.35; cursor: not-allowed; background: white !important; color: var(--azul) !important; border-color: var(--gris-borde) !important; }
 
@@ -1619,6 +1623,11 @@ function formatNum(n) {
 function renderProductos(categoria) {
     const cont = document.getElementById('productos-container');
     cont.innerHTML = '';
+    // Activar animación escalonada solo en este render
+    cont.classList.add('animando');
+    // Quitar la clase después de que terminen todas las animaciones (~260ms)
+    setTimeout(() => cont.classList.remove('animando'), 350);
+
     CATALOGO[categoria].forEach(p => {
         const card = document.createElement('div');
         card.className = 'producto-card';
@@ -1894,28 +1903,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cargar configuración primero
     await cargarConfig();
 
-    // Mostrar la página ahora que tenemos la config
-    document.body.style.visibility = 'visible';
-
     // Verificar estado de la tienda
     if (!CONFIG.tienda_abierta) {
         document.getElementById('msg-cerrada').textContent = CONFIG.mensaje_cierre;
         irA('cerrada');
+        document.body.style.opacity = '1';
         return;
     }
 
     if (CONFIG.mantenimiento) {
         document.getElementById('msg-mantenimiento').textContent = CONFIG.mensaje_mantenimiento;
         irA('mantenimiento');
+        document.body.style.opacity = '1';
         return;
     }
 
     // Tienda abierta — cargar catálogo
-    document.getElementById('productos-container').innerHTML = `
-        <div style="text-align:center;padding:40px;color:var(--gris-texto)">
-            ⏳ Cargando productos...
-        </div>`;
-
     const ok = await cargarCatalogo();
 
     if (!ok || Object.keys(CATALOGO).length === 0) {
@@ -1934,13 +1937,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const seccionGuardada = sessionStorage.getItem('seccion');
     const seccionesSeguras = ['inicio', 'catalogo', 'carrito'];
     if (seccionGuardada && seccionesSeguras.includes(seccionGuardada)) {
-        // Restaurar categoría activa si estaba en catálogo
         if (seccionGuardada === 'catalogo') {
             const catGuardada = sessionStorage.getItem('categoriaActiva');
             categoriaActiva = catGuardada || null;
         }
         irA(seccionGuardada);
     }
+
+    // Mostrar la página AHORA que la sección correcta ya está activa → sin flash
+    document.body.style.opacity = '1';
 });
 </script>
 </body>
