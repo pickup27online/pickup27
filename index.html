@@ -51,13 +51,14 @@
            TÍTULO WATERMARK — CATEGORÍAS
         ============================================================ */
         .catalogo-titulo-fondo {
-            font-size: 42px;
+            font-size: 62px;
             font-weight: 900;
             color: var(--azul);
-            opacity: 0.07;
-            letter-spacing: -1px;
-            margin-bottom: -10px;
-            margin-top: 4px;
+            opacity: 0.08;
+            letter-spacing: -2px;
+            margin-bottom: 14px;
+            margin-top: 6px;
+            line-height: 1;
             user-select: none;
             pointer-events: none;
         }
@@ -316,13 +317,36 @@
         .cantidad-controles {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 12px;
             background: var(--gris-fondo);
             border-radius: var(--radio-sm);
-            padding: 4px 8px;
+            padding: 5px 10px;
         }
 
-        .btn-cant {
+        .cant-valor {
+            min-width: 28px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        /* ============================================================
+           ANIMACIÓN PRODUCTOS AL DESPLEGAR CATEGORÍA
+        ============================================================ */
+        @keyframes cardEntrada {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .producto-card {
+            animation: cardEntrada 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+
+        .producto-card:nth-child(2) { animation-delay: 0.04s; }
+        .producto-card:nth-child(3) { animation-delay: 0.08s; }
+        .producto-card:nth-child(4) { animation-delay: 0.12s; }
+        .producto-card:nth-child(5) { animation-delay: 0.16s; }
+        .producto-card:nth-child(n+6) { animation-delay: 0.20s; }
             background: white;
             border: 1px solid var(--gris-borde);
             width: 28px;
@@ -347,13 +371,6 @@
            para evitar que :active se quede pegado en Android */
         .btn-cant.pressed { background: var(--azul-claro); color: white; border-color: var(--azul-claro); }
         .btn-cant:disabled { opacity: 0.35; cursor: not-allowed; background: white !important; color: var(--azul) !important; border-color: var(--gris-borde) !important; }
-
-        .cant-valor {
-            min-width: 24px;
-            text-align: center;
-            font-weight: 700;
-            font-size: 15px;
-        }
 
         .btn-agregar {
             background: var(--azul);
@@ -1288,6 +1305,11 @@ async function irA(seccion) {
     if (historial[historial.length - 1] !== seccion) {
         historial.push(seccion);
     }
+    // Persistir sección para recuperar tras refresco
+    try { sessionStorage.setItem('seccion', seccion); } catch(e) {}
+    if (seccion === 'catalogo') {
+        try { sessionStorage.setItem('categoriaActiva', categoriaActiva || ''); } catch(e) {}
+    }
     // Actualizar header
     actualizarHeader(seccion);
     // Renderizar contenido
@@ -1577,11 +1599,21 @@ function renderCategorias() {
         btn.className = 'btn-categoria' + (cat === categoriaActiva ? ' activa' : '');
         btn.textContent = cat;
         btn.onclick = () => {
-            categoriaActiva = cat;
+            // Segunda pulsación en la misma categoría → vuelve a solo categorías
+            if (categoriaActiva === cat) {
+                categoriaActiva = null;
+            } else {
+                categoriaActiva = cat;
+            }
             renderCatalogo();
         };
         cont.appendChild(btn);
     });
+}
+
+// Formatea números con coma como separador de miles: 1680 → 1,680
+function formatNum(n) {
+    return Number(n).toLocaleString('en-US');
 }
 
 function renderProductos(categoria) {
@@ -1594,7 +1626,7 @@ function renderProductos(categoria) {
         card.innerHTML = `
             <div class="producto-info">
                 <div class="producto-nombre">${p.nombre}</div>
-                <div class="producto-precio">${p.precio} CUP</div>
+                <div class="producto-precio">${formatNum(p.precio)} CUP</div>
                 <div class="producto-stock ${agotado ? 'agotado' : 'disponible'}">
                     ${agotado ? '⛔ Agotado' : '✅ Disponible'}
                 </div>
@@ -1673,11 +1705,11 @@ function cambiarCantCarrito(id, delta) {
     const spans = document.querySelectorAll(`[data-carrito-id="${id}"]`);
     spans.forEach(el => {
         if (el.dataset.tipo === 'cant') el.textContent = carrito[id].cantidad;
-        if (el.dataset.tipo === 'subtotal') el.textContent = `${carrito[id].precio * carrito[id].cantidad} CUP`;
+        if (el.dataset.tipo === 'subtotal') el.textContent = `${formatNum(carrito[id].precio * carrito[id].cantidad)} CUP`;
     });
     // Actualizar total
     const totalEl = document.querySelector('.total-valor');
-    if (totalEl) totalEl.textContent = `${obtenerTotal()} CUP`;
+    if (totalEl) totalEl.textContent = `${formatNum(obtenerTotal())} CUP`;
 }
 
 function renderCarrito() {
@@ -1703,14 +1735,14 @@ function renderCarrito() {
         div.innerHTML = `
             <div style="flex:1">
                 <div class="item-nombre">${item.nombre}</div>
-                <div class="item-detalle">${item.precio} CUP c/u</div>
+                <div class="item-detalle">${formatNum(item.precio)} CUP c/u</div>
             </div>
             <div class="cantidad-controles" style="margin:0 8px">
                 <button class="btn-cant" onclick="cambiarCantCarrito('${id}', -1)">−</button>
                 <span class="cant-valor" data-carrito-id="${id}" data-tipo="cant">${item.cantidad}</span>
                 <button class="btn-cant" onclick="cambiarCantCarrito('${id}', 1)">+</button>
             </div>
-            <div class="item-subtotal" style="margin-right:8px" data-carrito-id="${id}" data-tipo="subtotal">${subtotal} CUP</div>
+            <div class="item-subtotal" style="margin-right:8px" data-carrito-id="${id}" data-tipo="subtotal">${formatNum(subtotal)} CUP</div>
             <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑 Vaciar</button>
         `;
         cont.appendChild(div);
@@ -1719,7 +1751,7 @@ function renderCarrito() {
     totalCont.innerHTML = `
         <div class="total-box">
             <span class="total-label">Total a pagar</span>
-            <span class="total-valor">${obtenerTotal()} CUP</span>
+            <span class="total-valor">${formatNum(obtenerTotal())} CUP</span>
         </div>`;
 }
 
@@ -1746,9 +1778,9 @@ function renderConfirmacion() {
             <div class="resumen-item">
                 <div>
                     <div class="resumen-item-nombre">${item.nombre}</div>
-                    <div class="resumen-item-detalle">${item.cantidad} x ${item.precio} CUP</div>
+                    <div class="resumen-item-detalle">${item.cantidad} x ${formatNum(item.precio)} CUP</div>
                 </div>
-                <div class="resumen-item-precio">${subtotal} CUP</div>
+                <div class="resumen-item-precio">${formatNum(subtotal)} CUP</div>
             </div>`;
     });
 
@@ -1758,7 +1790,7 @@ function renderConfirmacion() {
             ${items}
             <div class="resumen-item" style="background:#f0f4ff">
                 <div class="resumen-item-nombre" style="color:#1a3a6b">Total</div>
-                <div class="resumen-item-precio" style="font-size:18px">${obtenerTotal()} CUP</div>
+                <div class="resumen-item-precio" style="font-size:18px">${formatNum(obtenerTotal())} CUP</div>
             </div>
         </div>`;
 }
@@ -1897,6 +1929,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Verificar si el carrito expiró
     obtenerCarrito();
     actualizarBadge();
+
+    // Restaurar sección donde estaba el usuario antes del refresco
+    const seccionGuardada = sessionStorage.getItem('seccion');
+    const seccionesSeguras = ['inicio', 'catalogo', 'carrito'];
+    if (seccionGuardada && seccionesSeguras.includes(seccionGuardada)) {
+        // Restaurar categoría activa si estaba en catálogo
+        if (seccionGuardada === 'catalogo') {
+            const catGuardada = sessionStorage.getItem('categoriaActiva');
+            categoriaActiva = catGuardada || null;
+        }
+        irA(seccionGuardada);
+    }
 });
 </script>
 </body>
