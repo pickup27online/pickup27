@@ -38,8 +38,8 @@
            TRANSICIONES DE PÁGINA
         ============================================================ */
         .seccion { display: none; }
-        .seccion.activa {
-            display: block;
+        .seccion.activa { display: block; }
+        .seccion.animando-entrada {
             animation: fadeSlideIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
@@ -239,21 +239,28 @@
         ============================================================ */
         .categorias {
             display: flex;
-            gap: 8px;
-            margin-bottom: 20px;
+            gap: 10px;
+            margin-bottom: 24px;
             flex-wrap: wrap;
         }
 
         .btn-categoria {
             background: white;
             border: 2px solid var(--gris-borde);
-            padding: 8px 16px;
-            border-radius: 30px;
-            font-size: 13px;
-            font-weight: 600;
+            padding: 12px 22px;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 700;
             cursor: pointer;
             transition: all 0.2s;
-            color: var(--gris-texto);
+            color: var(--azul);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 2px 8px rgba(26,58,107,0.07);
+            letter-spacing: 0.01em;
+            min-width: 120px;
         }
 
         .btn-categoria.activa,
@@ -261,6 +268,8 @@
             background: var(--azul);
             border-color: var(--azul);
             color: white;
+            box-shadow: 0 4px 16px rgba(26,58,107,0.22);
+            transform: translateY(-1px);
         }
 
         /* ============================================================
@@ -1306,22 +1315,21 @@ async function procesarColaNotif() {
     localStorage.setItem('notif_cola', '[]');
 }
 
-async function verificarStockRecuperado() {
-    // Comparar stock actual vs anterior
-    Object.values(CATALOGO).flat().forEach(async p => {
-        const anterior = _stockAnterior[p.id];
-        // Solo notificar si antes estaba en 0 y ahora hay stock
+async function verificarStockRecuperado(stockPrevio) {
+    // stockPrevio: snapshot tomado ANTES de recargar el catálogo
+    const productos = Object.values(CATALOGO).flat();
+    for (const p of productos) {
+        const anterior = stockPrevio[p.id];
+        // Notificar solo si antes estaba en 0 y ahora hay stock
         if (anterior === 0 && p.stock > 0) {
             const enviado = await enviarNotifStock(p.nombre);
             if (!enviado) {
-                // Sin permiso → encolar para cuando el usuario active notificaciones
+                // Sin permiso → encolar
                 encolarNotifStock(p.id, p.nombre);
             }
         }
-    });
-    // Actualizar referencia
-    guardarStockAnterior();
-    // Procesar cola si hay permiso
+    }
+    // Procesar cola pendiente si hay permiso activo
     await procesarColaNotif();
 }
 
@@ -1336,18 +1344,30 @@ const SINCRO_THROTTLE_MS = 1_000;
 async function sincronizar() {
     const ahora = Date.now();
     if (ahora - _ultimaSincro < SINCRO_THROTTLE_MS) return;
-    _ultimaSincro = ahora;
+    await _sincronizarInterno();
+}
 
-    // 1. Guardar stock anterior ANTES de recargar para comparar
-    guardarStockAnterior();
+async function sincronizarForzado() {
+    await _sincronizarInterno();
+}
 
-    // 2. Cargar config Y catálogo en paralelo (más rápido)
+async function _sincronizarInterno() {
+    _ultimaSincro = Date.now();
+
+    // 1. Tomar snapshot del stock ANTES de recargar
+    const stockPrevio = {};
+    Object.values(CATALOGO).flat().forEach(p => { stockPrevio[p.id] = p.stock; });
+
+    // 2. Cargar config Y catálogo en paralelo
     await Promise.all([cargarConfig(), cargarCatalogo()]);
 
-    // 3. Detectar productos que volvieron a tener stock y notificar
-    await verificarStockRecuperado();
+    // 3. Detectar stock recuperado (0→1+) usando el snapshot anterior
+    await verificarStockRecuperado(stockPrevio);
 
-    // 4. Verificar estado de la tienda tras actualizar config
+    // 4. Actualizar referencia de stock para la próxima sincronización
+    guardarStockAnterior();
+
+    // 5. Verificar estado de la tienda
     const seccionActual = historial[historial.length - 1] || 'inicio';
     const seccionesLibres = ['cerrada', 'mantenimiento', 'inicio', 'error-agotado', 'error-stock',
                              'enviado', 'enviado-confirmado', 'enviado-rechazado'];
@@ -1363,7 +1383,7 @@ async function sincronizar() {
         return;
     }
 
-    // 5. Actualizar precios del carrito si cambiaron en Sheets
+    // 6. Actualizar precios del carrito si cambiaron en Sheets
     const carrito = obtenerCarrito();
     let carritoActualizado = false;
     for (const id of Object.keys(carrito)) {
@@ -1375,7 +1395,7 @@ async function sincronizar() {
     }
     if (carritoActualizado) guardarCarrito(carrito);
 
-    // 6. Re-renderizar la vista actual si corresponde
+    // 7. Re-renderizar la vista actual si corresponde
     if (seccionActual === 'catalogo') renderCatalogo();
     if (seccionActual === 'carrito') renderCarrito();
     if (seccionActual === 'confirmacion') renderConfirmacion();
@@ -1403,16 +1423,28 @@ async function irA(seccion) {
         seccion = 'mantenimiento';
     }
 
-    // Ocultar todas
-    document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
-    // Mostrar la pedida
-    document.getElementById(`sec-${seccion}`).classList.add('activa');
+    const seccionAnterior = historial[historial.length - 1];
+    const esCambio = seccionAnterior !== seccion;
+
+    // Ocultar todas — quitar animando-entrada de todas
+    document.querySelectorAll('.seccion').forEach(s => {
+        s.classList.remove('activa', 'animando-entrada');
+    });
+
+    // Mostrar la nueva sección
+    const el = document.getElementById(`sec-${seccion}`);
+    el.classList.add('activa');
+
+    // Solo animar si es un cambio real de sección
+    if (esCambio) {
+        el.classList.add('animando-entrada');
+        setTimeout(() => el.classList.remove('animando-entrada'), 320);
+    }
+
     // Scroll al inicio
     window.scrollTo(0, 0);
     // Actualizar historial
-    if (historial[historial.length - 1] !== seccion) {
-        historial.push(seccion);
-    }
+    if (esCambio) historial.push(seccion);
     // Persistir sección para recuperar tras refresco
     try { sessionStorage.setItem('seccion', seccion); } catch(e) {}
     if (seccion === 'catalogo') {
@@ -1690,30 +1722,39 @@ function toast(msg) {
 // ============================================================
 let categoriaActiva = null; // null = mostrar solo categorías
 
-function renderCatalogo() {
-    renderCategorias();
-    if (categoriaActiva) {
-        renderProductos(categoriaActiva);
-    } else {
-        document.getElementById('productos-container').innerHTML = '';
-    }
-}
-
 function renderCategorias() {
+    // Emojis por nombre de categoría (insensible a mayúsculas)
+    const emojis = {
+        'mercado':   '🛒',
+        'líquidos':  '💧',
+        'liquidos':  '💧',
+        'frutas':    '🍎',
+        'verduras':  '🥦',
+        'panadería': '🍞',
+        'panaderia': '🍞',
+        'carnes':    '🥩',
+        'limpieza':  '🧹',
+        'higiene':   '🧴',
+    };
+
     const cont = document.getElementById('categorias-container');
     cont.innerHTML = '';
     Object.keys(CATALOGO).forEach(cat => {
         const btn = document.createElement('button');
         btn.className = 'btn-categoria' + (cat === categoriaActiva ? ' activa' : '');
-        btn.textContent = cat;
-        btn.onclick = () => {
-            // Segunda pulsación en la misma categoría → vuelve a solo categorías
-            if (categoriaActiva === cat) {
-                categoriaActiva = null;
+        const emoji = emojis[cat.toLowerCase()] || '🏷️';
+        btn.innerHTML = `<span>${emoji}</span><span>${cat}</span>`;
+        btn.onclick = async () => {
+            const abriendo = categoriaActiva !== cat;
+            categoriaActiva = categoriaActiva === cat ? null : cat;
+
+            if (abriendo && categoriaActiva) {
+                renderCategorias();
+                await sincronizarForzado();
+                mostrarProductos(categoriaActiva);
             } else {
-                categoriaActiva = cat;
+                renderCatalogo();
             }
-            renderCatalogo();
         };
         cont.appendChild(btn);
     });
@@ -1725,11 +1766,13 @@ function formatNum(n) {
 }
 
 function renderCatalogo() {
-    renderCategorias();
     if (categoriaActiva) {
+        renderCategorias();
         mostrarProductos(categoriaActiva);
     } else {
-        ocultarProductos();
+        // Primero animar salida de productos, luego actualizar categorías
+        // Así la barra inferior no salta mientras los productos desaparecen
+        ocultarProductos(() => renderCategorias());
     }
 }
 
@@ -1766,8 +1809,8 @@ function mostrarProductos(categoria) {
     });
 
     // Swap atómico: vaciar y rellenar en el mismo frame, luego animar
-    cont.innerHTML = '';
     cont.classList.remove('saliendo', 'entrando');
+    cont.innerHTML = '';
     cont.appendChild(fragment);
     // Forzar reflow para que la animación empiece desde cero
     void cont.offsetHeight;
@@ -1776,14 +1819,19 @@ function mostrarProductos(categoria) {
 }
 
 // Cierra los productos con animación de salida fluida
-function ocultarProductos() {
+// onDone: callback ejecutado cuando la animación termina
+function ocultarProductos(onDone) {
     const cont = document.getElementById('productos-container');
-    if (!cont.children.length) return;
+    if (!cont.children.length) {
+        if (onDone) onDone();
+        return;
+    }
     cont.classList.remove('entrando');
     cont.classList.add('saliendo');
     setTimeout(() => {
         cont.classList.remove('saliendo');
         cont.innerHTML = '';
+        if (onDone) onDone();
     }, 160);
 }
 
