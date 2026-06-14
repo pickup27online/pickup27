@@ -332,20 +332,30 @@
         }
 
         /* ============================================================
-           ANIMACIÓN PRODUCTOS AL DESPLEGAR CATEGORÍA
-           Solo se activa cuando el contenedor tiene la clase .animando
+           ANIMACIÓN PRODUCTOS AL DESPLEGAR/CERRAR CATEGORÍA
         ============================================================ */
         @keyframes cardEntrada {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to   { opacity: 1; transform: translateY(0); }
         }
 
-        #productos-container.animando .producto-card { animation: cardEntrada 0.22s cubic-bezier(0.22, 1, 0.36, 1) both; }
-        #productos-container.animando .producto-card:nth-child(2) { animation-delay: 0.04s; }
-        #productos-container.animando .producto-card:nth-child(3) { animation-delay: 0.08s; }
-        #productos-container.animando .producto-card:nth-child(4) { animation-delay: 0.12s; }
-        #productos-container.animando .producto-card:nth-child(5) { animation-delay: 0.16s; }
-        #productos-container.animando .producto-card:nth-child(n+6) { animation-delay: 0.20s; }
+        @keyframes cardSalida {
+            from { opacity: 1; transform: translateY(0); }
+            to   { opacity: 0; transform: translateY(-6px); }
+        }
+
+        /* Sin animación por defecto — solo cuando JS añade la clase */
+        #productos-container.entrando .producto-card {
+            animation: cardEntrada 0.20s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        #productos-container.entrando .producto-card:nth-child(2) { animation-delay: 0.04s; }
+        #productos-container.entrando .producto-card:nth-child(3) { animation-delay: 0.08s; }
+        #productos-container.entrando .producto-card:nth-child(4) { animation-delay: 0.11s; }
+        #productos-container.entrando .producto-card:nth-child(n+5) { animation-delay: 0.14s; }
+
+        #productos-container.saliendo .producto-card {
+            animation: cardSalida 0.14s ease forwards;
+        }
 
         /* ============================================================
            BOTONES CANTIDAD +/−
@@ -410,9 +420,22 @@
             margin-bottom: 10px;
             box-shadow: var(--sombra);
             display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-carrito-fila1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .item-carrito-fila2 {
+            display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
         }
 
         .item-nombre {
@@ -430,7 +453,6 @@
             font-weight: 800;
             font-size: 15px;
             color: var(--azul);
-            text-align: right;
             white-space: nowrap;
         }
 
@@ -438,15 +460,16 @@
             background: #fee2e2;
             color: var(--rojo);
             border: none;
-            width: 30px;
-            height: 30px;
+            padding: 6px 12px;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 12px;
+            font-weight: 600;
             display: flex;
             align-items: center;
-            justify-content: center;
+            gap: 4px;
             transition: background 0.2s;
+            white-space: nowrap;
             flex-shrink: 0;
         }
 
@@ -1228,6 +1251,81 @@ async function cargarCatalogo() {
 }
 
 // ============================================================
+// NOTIFICACIONES DE STOCK RECUPERADO
+// Cuando un producto pasa de 0 → 1+, notifica al usuario.
+// Si las notificaciones están desactivadas, encola.
+// Las notificaciones en cola expiran a los 30 minutos.
+// ============================================================
+const NOTIF_EXPIRY_MS = 30 * 60 * 1000; // 30 minutos
+
+// Stock anterior para detectar cambios 0→1+
+let _stockAnterior = {};
+
+function guardarStockAnterior() {
+    _stockAnterior = {};
+    Object.values(CATALOGO).flat().forEach(p => {
+        _stockAnterior[p.id] = p.stock;
+    });
+}
+
+function encolarNotifStock(id, nombre) {
+    let cola = [];
+    try { cola = JSON.parse(localStorage.getItem('notif_cola') || '[]'); } catch(e) {}
+    // Evitar duplicados en cola
+    if (cola.find(n => n.id === id)) return;
+    cola.push({ id, nombre, ts: Date.now() });
+    localStorage.setItem('notif_cola', JSON.stringify(cola));
+}
+
+function limpiarColaExpirada() {
+    let cola = [];
+    try { cola = JSON.parse(localStorage.getItem('notif_cola') || '[]'); } catch(e) {}
+    const vigentes = cola.filter(n => Date.now() - n.ts < NOTIF_EXPIRY_MS);
+    localStorage.setItem('notif_cola', JSON.stringify(vigentes));
+    return vigentes;
+}
+
+async function enviarNotifStock(nombre) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return false;
+    try {
+        new Notification('¡Producto disponible! 🎉', {
+            body: `${nombre} está disponible de nuevo en Pick-Up 27.`,
+            icon: '/favicon.ico'
+        });
+        return true;
+    } catch(e) { return false; }
+}
+
+async function procesarColaNotif() {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    const cola = limpiarColaExpirada();
+    if (!cola.length) return;
+    for (const notif of cola) {
+        await enviarNotifStock(notif.nombre);
+    }
+    localStorage.setItem('notif_cola', '[]');
+}
+
+async function verificarStockRecuperado() {
+    // Comparar stock actual vs anterior
+    Object.values(CATALOGO).flat().forEach(async p => {
+        const anterior = _stockAnterior[p.id];
+        // Solo notificar si antes estaba en 0 y ahora hay stock
+        if (anterior === 0 && p.stock > 0) {
+            const enviado = await enviarNotifStock(p.nombre);
+            if (!enviado) {
+                // Sin permiso → encolar para cuando el usuario active notificaciones
+                encolarNotifStock(p.id, p.nombre);
+            }
+        }
+    });
+    // Actualizar referencia
+    guardarStockAnterior();
+    // Procesar cola si hay permiso
+    await procesarColaNotif();
+}
+
+// ============================================================
 // SINCRONIZACIÓN EN TIEMPO REAL
 // Se dispara en cada click de botón (excepto +/−).
 // Throttle de 1s. Config y catálogo en paralelo.
@@ -1240,10 +1338,16 @@ async function sincronizar() {
     if (ahora - _ultimaSincro < SINCRO_THROTTLE_MS) return;
     _ultimaSincro = ahora;
 
-    // 1. Cargar config Y catálogo en paralelo (más rápido)
+    // 1. Guardar stock anterior ANTES de recargar para comparar
+    guardarStockAnterior();
+
+    // 2. Cargar config Y catálogo en paralelo (más rápido)
     await Promise.all([cargarConfig(), cargarCatalogo()]);
 
-    // 2. Verificar estado de la tienda tras actualizar config
+    // 3. Detectar productos que volvieron a tener stock y notificar
+    await verificarStockRecuperado();
+
+    // 4. Verificar estado de la tienda tras actualizar config
     const seccionActual = historial[historial.length - 1] || 'inicio';
     const seccionesLibres = ['cerrada', 'mantenimiento', 'inicio', 'error-agotado', 'error-stock',
                              'enviado', 'enviado-confirmado', 'enviado-rechazado'];
@@ -1259,7 +1363,7 @@ async function sincronizar() {
         return;
     }
 
-    // 3. Actualizar precios del carrito si cambiaron en Sheets
+    // 5. Actualizar precios del carrito si cambiaron en Sheets
     const carrito = obtenerCarrito();
     let carritoActualizado = false;
     for (const id of Object.keys(carrito)) {
@@ -1271,7 +1375,7 @@ async function sincronizar() {
     }
     if (carritoActualizado) guardarCarrito(carrito);
 
-    // 4. Re-renderizar la vista actual si corresponde
+    // 6. Re-renderizar la vista actual si corresponde
     if (seccionActual === 'catalogo') renderCatalogo();
     if (seccionActual === 'carrito') renderCarrito();
     if (seccionActual === 'confirmacion') renderConfirmacion();
@@ -1620,14 +1724,21 @@ function formatNum(n) {
     return Number(n).toLocaleString('en-US');
 }
 
-function renderProductos(categoria) {
-    const cont = document.getElementById('productos-container');
-    cont.innerHTML = '';
-    // Activar animación escalonada solo en este render
-    cont.classList.add('animando');
-    // Quitar la clase después de que terminen todas las animaciones (~260ms)
-    setTimeout(() => cont.classList.remove('animando'), 350);
+function renderCatalogo() {
+    renderCategorias();
+    if (categoriaActiva) {
+        mostrarProductos(categoriaActiva);
+    } else {
+        ocultarProductos();
+    }
+}
 
+// Muestra productos con animación de entrada — sin flash
+function mostrarProductos(categoria) {
+    const cont = document.getElementById('productos-container');
+
+    // Construir nuevo contenido en un fragment (fuera del DOM → sin flash)
+    const fragment = document.createDocumentFragment();
     CATALOGO[categoria].forEach(p => {
         const card = document.createElement('div');
         card.className = 'producto-card';
@@ -1651,8 +1762,29 @@ function renderProductos(categoria) {
                 </button>
             </div>
         `;
-        cont.appendChild(card);
+        fragment.appendChild(card);
     });
+
+    // Swap atómico: vaciar y rellenar en el mismo frame, luego animar
+    cont.innerHTML = '';
+    cont.classList.remove('saliendo', 'entrando');
+    cont.appendChild(fragment);
+    // Forzar reflow para que la animación empiece desde cero
+    void cont.offsetHeight;
+    cont.classList.add('entrando');
+    setTimeout(() => cont.classList.remove('entrando'), 400);
+}
+
+// Cierra los productos con animación de salida fluida
+function ocultarProductos() {
+    const cont = document.getElementById('productos-container');
+    if (!cont.children.length) return;
+    cont.classList.remove('entrando');
+    cont.classList.add('saliendo');
+    setTimeout(() => {
+        cont.classList.remove('saliendo');
+        cont.innerHTML = '';
+    }, 160);
 }
 
 function cambiarCant(id, delta) {
@@ -1742,17 +1874,21 @@ function renderCarrito() {
         const div = document.createElement('div');
         div.className = 'item-carrito';
         div.innerHTML = `
-            <div style="flex:1">
-                <div class="item-nombre">${item.nombre}</div>
-                <div class="item-detalle">${formatNum(item.precio)} CUP c/u</div>
+            <div class="item-carrito-fila1">
+                <div>
+                    <div class="item-nombre">${item.nombre}</div>
+                    <div class="item-detalle">${formatNum(item.precio)} CUP c/u</div>
+                </div>
+                <div class="item-subtotal" data-carrito-id="${id}" data-tipo="subtotal">${formatNum(subtotal)} CUP</div>
             </div>
-            <div class="cantidad-controles" style="margin:0 8px">
-                <button class="btn-cant" onclick="cambiarCantCarrito('${id}', -1)">−</button>
-                <span class="cant-valor" data-carrito-id="${id}" data-tipo="cant">${item.cantidad}</span>
-                <button class="btn-cant" onclick="cambiarCantCarrito('${id}', 1)">+</button>
+            <div class="item-carrito-fila2">
+                <div class="cantidad-controles">
+                    <button class="btn-cant" onclick="cambiarCantCarrito('${id}', -1)">−</button>
+                    <span class="cant-valor" data-carrito-id="${id}" data-tipo="cant">${item.cantidad}</span>
+                    <button class="btn-cant" onclick="cambiarCantCarrito('${id}', 1)">+</button>
+                </div>
+                <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑 Vaciar</button>
             </div>
-            <div class="item-subtotal" style="margin-right:8px" data-carrito-id="${id}" data-tipo="subtotal">${formatNum(subtotal)} CUP</div>
-            <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑 Vaciar</button>
         `;
         cont.appendChild(div);
     });
@@ -1932,6 +2068,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Verificar si el carrito expiró
     obtenerCarrito();
     actualizarBadge();
+
+    // Guardar snapshot de stock inicial para detectar cambios 0→1+ en sincronizaciones futuras
+    guardarStockAnterior();
+    // Procesar cola de notificaciones pendientes si el usuario ya tiene permiso
+    procesarColaNotif();
 
     // Restaurar sección donde estaba el usuario antes del refresco
     const seccionGuardada = sessionStorage.getItem('seccion');
