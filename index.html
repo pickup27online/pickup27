@@ -142,7 +142,6 @@
             border-radius: 50%;
             width: 18px;
             height: 18px;
-            display: flex;
             align-items: center;
             justify-content: center;
             display: none;
@@ -298,7 +297,7 @@
         .productos-grid {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
             margin-bottom: 30px;
         }
 
@@ -311,12 +310,14 @@
             flex-direction: column;
         }
 
+        /* Imagen grande arriba */
         .producto-img-wrap {
             width: 100%;
-            height: 260px;
+            height: 200px;
             background: var(--gris-fondo);
             overflow: hidden;
             position: relative;
+            flex-shrink: 0;
         }
 
         .producto-thumb {
@@ -325,39 +326,38 @@
             object-fit: cover;
             object-position: center;
             display: block;
-            transition: transform 0.35s ease;
-        }
-
-        .producto-card:hover .producto-thumb {
-            transform: scale(1.04);
         }
 
         .producto-thumb-placeholder {
-            font-size: 72px;
-            opacity: 0.18;
+            font-size: 64px;
+            opacity: 0.15;
             position: absolute;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
         }
 
+        /* Info y controles abajo */
         .producto-body {
-            padding: 16px 18px 18px;
+            padding: 14px 16px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
         }
 
-        .producto-info { margin-bottom: 14px; }
+        .producto-info { }
 
         .producto-nombre {
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             color: #1e293b;
-            margin-bottom: 6px;
+            margin-bottom: 5px;
         }
 
         .producto-precio {
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 800;
             color: var(--azul);
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .producto-stock {
@@ -946,8 +946,7 @@
         ============================================================ */
         @media (max-width: 400px) {
             .inicio-titulo { font-size: 26px; }
-            .producto-card { flex-direction: column; align-items: flex-start; }
-            .producto-controles { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
+            .producto-controles { width: 100%; justify-content: space-between; align-items: center; }
         }
     </style>
 </head>
@@ -1540,8 +1539,7 @@ async function irA(seccion) {
 function irAtras() {
     historial.pop();
     const anterior = historial[historial.length - 1] || 'inicio';
-    // Si volvemos al catálogo o al inicio, limpiar categoría activa
-    if (anterior === 'catalogo' || anterior === 'inicio') categoriaActiva = null;
+    if (anterior === 'catalogo') categoriaActiva = null;
     irA(anterior);
 }
 
@@ -1583,15 +1581,19 @@ function actualizarHeader(seccion) {
 const HORA_MS = 60 * 60 * 1000; // 1 hora en milisegundos
 
 function obtenerCarrito() {
-    const data = JSON.parse(localStorage.getItem('carrito_p27'));
-    if (!data) return {};
-    // Verificar si expiró
-    if (Date.now() - data.timestamp > HORA_MS) {
+    try {
+        const data = JSON.parse(localStorage.getItem('carrito_p27'));
+        if (!data) return {};
+        if (Date.now() - data.timestamp > HORA_MS) {
+            localStorage.removeItem('carrito_p27');
+            actualizarBadge();
+            return {};
+        }
+        return data.items || {};
+    } catch(e) {
         localStorage.removeItem('carrito_p27');
-        actualizarBadge();
         return {};
     }
-    return data.items || {};
 }
 
 function guardarCarrito(items) {
@@ -1819,28 +1821,11 @@ let categoriaActiva = null;
 let _animandoCatalogo = false; // bloquea re-renders durante animación
 
 function renderCategorias() {
-    const emojis = {
-        'mercado':   '🍚',
-        'líquidos':  '🍺',
-        'liquidos':  '🍺',
-        'frutas':    '🍎',
-        'verduras':  '🥦',
-        'panadería': '🍞',
-        'panaderia': '🍞',
-        'carnes':    '🥩',
-        'limpieza':  '🧹',
-        'higiene':   '🧴',
-    };
-
     const cont = document.getElementById('categorias-container');
     cont.innerHTML = '';
     Object.keys(CATALOGO).forEach(cat => {
         const btn = document.createElement('button');
         btn.className = 'btn-categoria' + (cat === categoriaActiva ? ' activa' : '');
-        // Limpiar el nombre: quitar emojis y espacios del inicio para buscar en el mapa
-        const nombreLimpio = cat.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\s]+/gu, '').toLowerCase().trim();
-        const emoji = emojis[nombreLimpio] || emojis[cat.toLowerCase().trim()] || '';
-        // Mostrar el nombre tal como viene de Sheets (con su propio emoji si lo tiene)
         btn.innerHTML = `<span>${cat}</span>`;
         btn.onclick = async () => {
             if (_animandoCatalogo) return; // evitar doble click durante animación
@@ -1889,25 +1874,27 @@ function mostrarProductos(categoria) {
         const imgSrc = PRODUCT_IMGS[p.id] || '';
         const imgHtml = imgSrc
             ? `<img src="${imgSrc}" alt="${p.nombre}" class="producto-thumb">`
-            : `<div style="width:52px;height:52px;flex-shrink:0"></div>`;
+            : `<div class="producto-thumb-placeholder">🛒</div>`;
         card.innerHTML = `
-            ${imgHtml}
-            <div class="producto-info">
-                <div class="producto-nombre">${p.nombre}</div>
-                <div class="producto-precio">${formatNum(p.precio)} CUP</div>
-                <div class="producto-stock ${agotado ? 'agotado' : 'disponible'}">
-                    ${agotado ? '⛔ Agotado' : '✅ Disponible'}
+            <div class="producto-img-wrap">${imgHtml}</div>
+            <div class="producto-body">
+                <div class="producto-info">
+                    <div class="producto-nombre">${p.nombre}</div>
+                    <div class="producto-precio">${formatNum(p.precio)} CUP</div>
+                    <div class="producto-stock ${agotado ? 'agotado' : 'disponible'}">
+                        ${agotado ? '⛔ Agotado' : '✅ Disponible'}
+                    </div>
                 </div>
-            </div>
-            <div class="producto-controles">
-                <div class="cantidad-controles">
-                    <button class="btn-cant" onclick="cambiarCant('${p.id}', -1)" ${agotado ? 'disabled' : ''}>−</button>
-                    <span class="cant-valor" id="cant-${p.id}">1</span>
-                    <button class="btn-cant" onclick="cambiarCant('${p.id}', 1)" ${agotado ? 'disabled' : ''}>+</button>
+                <div class="producto-controles">
+                    <div class="cantidad-controles">
+                        <button class="btn-cant" onclick="cambiarCant('${p.id}', -1)" ${agotado ? 'disabled' : ''}>−</button>
+                        <span class="cant-valor" id="cant-${p.id}">1</span>
+                        <button class="btn-cant" onclick="cambiarCant('${p.id}', 1)" ${agotado ? 'disabled' : ''}>+</button>
+                    </div>
+                    <button class="btn-agregar" onclick="onAgregar('${p.id}')" ${agotado ? 'disabled' : ''}>
+                        + Agregar
+                    </button>
                 </div>
-                <button class="btn-agregar" onclick="onAgregar('${p.id}')" ${agotado ? 'disabled' : ''}>
-                    + Agregar
-                </button>
             </div>
         `;
         fragment.appendChild(card);
@@ -2268,12 +2255,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Mostrar la página AHORA que la sección correcta ya está activa → sin flash
     document.body.style.opacity = '1';
 
-    // ── POLLING: verificar estado tienda cada 8s ──────────────
+    // ── POLLING cada 3s: detectar cierre/mantenimiento al instante ──
     setInterval(async () => {
-        await cargarConfig();
         const seccionActual = historial[historial.length - 1] || 'inicio';
-        const seccionesLibres = ['cerrada', 'mantenimiento', 'inicio', 'enviado', 'enviado-confirmado', 'enviado-rechazado'];
-        if (seccionesLibres.includes(seccionActual)) return;
+        const libres = ['cerrada', 'mantenimiento', 'inicio', 'enviado', 'enviado-confirmado', 'enviado-rechazado', 'error-agotado', 'error-stock'];
+        if (libres.includes(seccionActual)) return;
+
+        await cargarConfig();
 
         if (!CONFIG.tienda_abierta) {
             document.getElementById('msg-cerrada').textContent = CONFIG.mensaje_cierre;
@@ -2282,7 +2270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.getElementById('msg-mantenimiento').textContent = CONFIG.mensaje_mantenimiento;
             irA('mantenimiento');
         }
-    }, 8000);
+    }, 3000);
 });
 </script>
 </body>
