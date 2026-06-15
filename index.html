@@ -285,7 +285,7 @@
         .producto-card {
             background: white;
             border-radius: var(--radio);
-            padding: 16px;
+            padding: 14px;
             box-shadow: var(--sombra);
             display: flex;
             justify-content: space-between;
@@ -293,17 +293,29 @@
             gap: 12px;
         }
 
-        .producto-info { flex: 1; }
+        .producto-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: 10px;
+            object-fit: cover;
+            flex-shrink: 0;
+            background: var(--gris-fondo);
+        }
+
+        .producto-info { flex: 1; min-width: 0; }
 
         .producto-nombre {
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
             color: #1e293b;
             margin-bottom: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .producto-precio {
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 800;
             color: var(--azul);
         }
@@ -1396,7 +1408,16 @@ async function _sincronizarInterno() {
     if (carritoActualizado) guardarCarrito(carrito);
 
     // 7. Re-renderizar la vista actual si corresponde
-    if (seccionActual === 'catalogo') renderCatalogo();
+    if (seccionActual === 'catalogo') {
+        // Si hay una categoría abierta, actualizar las cards en DOM sin destruirlas
+        // Esto evita el flash y es inmediato
+        if (categoriaActiva) {
+            actualizarCardsEnDOM(categoriaActiva);
+            renderCategorias(); // actualizar estado activo de botones
+        } else {
+            renderCategorias();
+        }
+    }
     if (seccionActual === 'carrito') renderCarrito();
     if (seccionActual === 'confirmacion') renderConfirmacion();
 }
@@ -1718,16 +1739,32 @@ function toast(msg) {
 }
 
 // ============================================================
+// IMÁGENES DE PRODUCTOS (base64 embebidas)
+// ============================================================
+const PRODUCT_IMGS = {
+  'aceite-vegetal-1l': 'data:image/webp;base64,UklGRiACAABXRUJQVlA4IBQCAADQCwCdASpQAFAAPpFEm0olo6IhpTgLyLASCUAapKZfycBvbteJX+meW77zZkU9y9diLA1mjl4IwA64hVWKKEeyqMDgWyEPbjk9C8rKNm94eS8ZJeO6VSg1dqN/It8deiD62dZF0yAAAP77Decv7c/f1FmoRvnnaEN5ufP34t4puxL7nXdpt+lGMQ3vEnJ7X5JHqU0LUnUE9+bkeuQ7+vMTwONenn59e3V43F8XYnqUFrTtePPxTBOBm9OfrNKdX2FJlEbBbdxzmWRXa0BKuffKUI1FNvdUyuKQ2DC/znWnOWAMc2Ki4kgI8VtHPygS//rDKlCwmPyBaYRuld81Creg+qBHv6O6Yqj5O7RXs6NtUkDLL5GGHKjdO4H5QBWK7/xagurkVnyN1iYhowYuCBqbQfn5I92U7eT9UHilR45dbc/RSkIjLtnt9zAnvKm07M/RghX3fdU9MLNY0Up8nxJOLHyx2mWVNUEijD/XxKUIDDDVttby5aqt9x5Ya7l8zh7c17uv2n0zE6GXsx91M9rxBpxZlMbpKSNw/qDaTW9ixZgkNBaAjEWTgrjmyrcV+8Ye+XnfsBHarI7o3HwNJY6EW40DfdJy4U1BQmE2s8psaf7gXNWUDFa24z4ryhC4uAq+wDM5RXOykSF3cIaoCHDNYWXgVMDhJdT+c6CZrKM3SCb9/DTAKqesmYUKDkJPGGCIAAAA',
+  'agua-500ml': 'data:image/webp;base64,UklGRr4CAABXRUJQVlA4ILICAABwDgCdASpQAFAAPpFGm0olpCIhpTgLyLASCWUAlQMFvL6GBIKvRFttueH9EV6qZFVswxw/njMDaZZulKZz9AMr94xEY4gK1hj3uXzQo1zO3Ux/axIVwstQXpHoS+zY8z8+x2gAV2hw31PMKj2PRIN+KbYmLwa6aTxaM74gAP77Ii3f2WL6aBUBVV6BxaJ/nqstBD0/Ms41mp4Cj9pomlsSolrksjVOOUWVgOYp+nxfqF/ri+aeUcoM34Xp8lSLC+4Ad2YYyIrGrza9c7E1x+yGoXrRIV/57X3xq79GZn6q9xJlk2bf446f5bNqrDPckqztus1Hzz4d4QJTFyYUri20reZRAawSYID67ZLWQ6GGnlCL2nY5S9ubH405xeggrJZ566dpdilrqWQudl3ANoH9DJnGVyfnTraYgXFQ0DrSDSQ0AvOiu/Yq9MSE/tl/2XqZAkiWgKPUdN3tlDa6jVJ193o6IiGaLB7n0h+IOKLGbOf1KsXIdbcoheNTtUQsiw2tBF7kd8ED/h2gu7+t7k5eWKS+lTIu+1SzAifPnQpRg9y2VVaQrvY7PCA3dB86YjgsmAq6DRGMkSkTDhGTw0ZicIXW5EDN1DDy7fSgL964ctU5OKsUxmxcPd3vTV0bJ63T/gHWhbdzTlpKjjX9ENgWn65SPfsY0ab9rxEbASMtoPKPNqMSYaGTBnQQfWHVzMpe12CSUQg+xH3JaoqBc2Mbz4YmJLNWCuU2Y4vSc8PilZi1SQmAJUoNXH09n3zvssbo3hD4Qv8wNamMH2LNaW/33luu77rCt8H3ZXjYUxGcM9a4QrIfpq8rByU4dgoDkXG58EYWf+L0SiDHn5agFyjS08aqQ5kr5NiHcdcbQujX82/csdUx1RyLmkshinREdHRdjdr5habb5Bn0GSRJpRIAAAA',
+  'agua-5l': 'data:image/webp;base64,UklGRjgCAABXRUJQVlA4ICwCAADwDACdASpQAFAAPpE+m0qloyIhpTQLyLASCWMAPkBtr9wt5AHAAeWF7Ek+saOVODwhw0qu7+XLwRf1iXL6lrffMVz8sQ51WbC+dBkbCB3qpTE44aUWmK/XDx0t6eSR/1rBflUGOEzieRZOg77GMqu8AP77DR26d9/UZ2dNj7ySZszx7htpiYi+1jqdpsaa8WZsZw+MmVMme5IEs6xQPLEyljIK2WRtfx6FwtSs5awmi98tFXoBB33QaFG+VeFN2dIdAdjcBweva6Xt0+6PfSRYFnv/fqMetVtjJgy3X/Otfifp+yPtKEZ6b9Yh1aEHnOWOvF8pF/WhdmemRjKyby9wf1nvBeh0iQuiMT/M5gdc6eJynGPURdnPrdwos3Fjn2VBtH/mffjAKl6AGliwPjKLq/FwpGJFWcfuUVlXODMHAGmj4sqPf1bksRRRBWIIBjQye3hZZ9BvutxqXEtd9i2DUiSVSMeikGCAi1Jef6y8r7JtO/QiG+g3sVKoH+4yAjIPF4alHxRMOaavBYj2BnAYMBQs6AsDuLmex+PjJWYd1sEZlQHb5rOkOk39+W2c4Y1ecwrRtSiG7BrTqpEUB0rlAbWtphjgT/Qc85VIMvqn/PEu401w6I2y75YltaJIHtB8WllkMufQDwrgfjGZ6kxaNwdsCXz+hELEbCOG7lAV5X02TxLdiCM9I2BZyOk8s8N5lFzOmhxu//sDlYXnFUyjoHWKZ6mSwAIUCAAA',
+  'azucar-blanca-1kg': 'data:image/webp;base64,UklGRhAEAABXRUJQVlA4WAoAAAAIAAAATwAATwAAVlA4IEIDAABQEACdASpQAFAAPpE8mkoloyIhp7K8oLASCUAZLatvZc09T7VroVuP2nNCwPwpe9pexJCZ8hGLYQmfeZSMMOG1HxdruJ4pJObm8UimP46yxLJvunTOsA3NBaNK7kliVD8Og+/ZcEhg3crMpqH7IPf8bc4SEw6vEXRhfbBdGcQIuN2BWWXG+kITMJfQAP7+YMyBSOR6uX6oqV7hyurSHv999DTTWLTNw2k7OBdJ1L9QL0mzwP6IpFuGZGu5jGEuR6zGn2a/wW6npNyM30SOgnhsoJfANvKWKKxo1ybEnH45sCT/IGQi00j6dfjO2MgTYA8Xr7OzD/QX3hArH5Ywo2fZVhV9jSp7S/rTabQfG+y+FY+/Vm2ev0/58/zTX1xsw5oomFgNAu1CLbqXZ1MUXxog2TxXQHf3pLNsZJCbrkRKMP04GMLKHew3/CO7FBQ8DlTr8qNQeh9VJ9fy/4gC4evO7gT+A3ynzGocTC/pqwin/TbsHvSmCYlxEWpIc3kiqosUh9D7j4xxzcmxzmWmRcdNHwoVlKoPimucXB5WrvtvkqV4JAptZE5nMsDhgPTbsJAKaQh/nA0hQ8CFt3HiEtSAP6jZKwbFhQK1AHLX7u21uPS6zycbxbqXrqaNuAjwXjG1E42Lpn3L6KBF6Zm3eHkaF09Y/sNPuSjncxw+e/sHL3QA13UNAGro2Zk3RRuAJpwJih4y/x5JausmRGuKgwcydcDQUymnOR8pbZt3rhC2CizGHQiT/qt1rTQK441EIT7gML2967oazH6hlnRUxm0RRoyN6JvIlI60sisk7ZxllOOUj4lXE7QnVqvfmRoVU2b6Dxje1uRgSVUxsuzU2gHEPjr9noV6ZOEleuEggrGnStVVvK+q8zXSesmBcfXn7ewAq/GqD5jdFdTHfWnlh+N9S4c9eN2SKmWjHB9LePtjMYMvXstBEGVP7jEOFBRls2lGOEsixSr0Hu1lj4xBY4CuFMy5opYFhZv9Wf8sBg6+AaZoDcDd48zWGewReRkUXIdkQLtPcIBoDlGTKicQgLZpiUR59q+y+QMwXa5RZiYjpxRM0FpIS8bbAYgypcHk4jmvbIOl0k6dOp6AHIlWxsoAAABFWElGqAAAAElJKgAIAAAAAQBphwQAAQAAABoAAAAAAAAAAQCGkgcAfAAAACwAAAAAAAAAVU5JQ09ERQAAQwBSAEUAQQBUAE8AUgA6ACAAZwBkAC0AagBwAGUAZwAgAHYAMQAuADAAIAAoAHUAcwBpAG4AZwAgAEkASgBHACAASgBQAEUARwAgAHYAOAAwACkALAAgAHEAdQBhAGwAaQB0AHkAIAA9ACAAMQAwADAACg==',
+  'frijol-negro-1kg': 'data:image/webp;base64,UklGRsACAABXRUJQVlA4ILQCAAAwDgCdASpQAFAAPpFCnkslo6KhpnM5mLASCWUA1dmD9mCfUtsyl50w4aVst2Om4u9Q0XtVHnpMu7HLslAnPu48te1w8PEfqRl7TeIDbMp+Fq1+HD8HSMa0tg4XdUAI8O0rGJ10arPrrAZGiJh7NFbdD/C9gn0OzL68AAD+/D+oR7XfTP0NZv1D+IduPjqnhEqqXbXTI9EyVUPWW/ngXzw4dSBxhl/HG0wdWtCwzc6+INy8vPeHBUzX416eD3bHLq+wutp8SfFG/xf/9RA1UlbqBXicgMMRBN3z/6MIL2LiShWUb/zdnOUEcZvY5Fl9aw64wnkn57+sSf7n1N2ylgFttW9ZLpTZGe8xDQalnatN+hM1SktWT1AfDF6HNtpMhfl2IR5Xq0JoM+q6WX19GYVVJ/cUGA+snoPvVnIAUiLFRFyIQ1VZ5B+0eR+MDYWC0seUtF/8nWj9YoxrbE5kjxCb3kVypbCoJK106b3+kHmRnVonhsvwJqIp+AmfMZWupO7EC5LEvcoUbteEs3qEBREL82sDvME2i3N7W69NaKuZRAKzuLsfrSu4ArsCnSRLT/eEawHJ4CLaSjG5RKt/h9CzBwJWc5gU10Eno65aMDAqVokN7nftQwRtI5o3U6D9sapj6Uq3D8wK0AAyKjp/afWAaNtdGQxDfUH5qEmPdzD9uRFOuA+SC94s0g0soqoCC1kcoLSQvL26KHNECKourwGICU03/9unfkmRXym1kPkLZtyTq+CBSYe6EAFoplOkcZevL72S0mwrdbL7Uw/W2HU1daU6q3YrXrQ2xFSDbFOJ0Ytel0tqwER4SUle+KO/1SOvE5r/c+u8clOCmLba3AHvyVixclHo3QtiAo8iz4jA9h/wI0qhMpeBnQ7CDr/oFadbnQizBapbPJmOApRFigF9gAAAAA==',
+  'leche-polvo-1kg': 'data:image/webp;base64,UklGRm4DAABXRUJQVlA4IGIDAABwEQCdASpQAFAAPpE8m0mloyKhJ7VbyLASCWQA1efWFKg0+2i5530S7wtvL+RjbWSgXX/+Ympls2/Lf9F55vQzz0fUnsF9HJiZbidNun8Qd1hp5qncxKosquSEOM+GUxWTrypEtFac8UpzSDmML77tOVJ0mopw+bJVHAbHv4C/vWo8CsrHZYrC2KmEpH94nPmuPjAAAP789HphK3sBuatXqldfH2CPVmaJzUIe+icHv60h75k39HH5Asj/kWs3Nfw069/5H9WLrR0Gxjqc/y6CkLaDze8wiPqv3zNtADhw2O49VRCnZvn8V2PJKx45dlZqXE73zSRp5oSluEle5bycyxiDCfHirkors6pzShQzHU7ZpRWKqj1xkYdogUKsw1VhBrmIWU/2558oEJ5KYi2ORwt2We34d3qfRev0vIFtOHeUEKLQixJJqxiq+plm3rS4jwKU6A6v8Smvthkx7kPCFeNQTwWW9BN1rIjfRgUkB8XHKfhw83QpkyRz4UdBF69MbhKsrJB4wUhmCGmBDG68rlG1ZHUg9fI8vAwWl1QtbosP1ZfCtp+A07RG7MbZxhJUBRA8LI6OEHEUA+Q7ZCOvptvbOxBiIBO1bfy+PhLopsEU+IcmzDD7P1pIqS03I+FPnTl0iEoz+5gcylMSy/Y80+l4uhjLgqMqLotDs0AJAl14Nl/QF+mfA7u179ngdxUhwnEFZ9aE054GdHnSvFgNLZEm9e8D/0Xx+IZn2OK+Tm4HP/vWTTY+Ye7crkFPFNPqOn7CdPMAlZh4R6wmtlglcp3YIazG++X4DpXM1sObi/V+TQv9xjVc3mANiCbJPDmom8+sOjZ5V8j8AiS46f8J6z5mxzvloDhD+z3AOz4zs280ebPZ96j/3w/hVx/H8e0A1poRWn6FIB802SCiRnoWttQSjoWutJnBqm9fXeG1dL2PIw96my5KxUaldWF4LueFS8/Dt+Zkc3R34/zJfpjUnrgrzCZF7bVeyRRo2HirsJgB7oaIkiZaIkrTmuJAYws0d/9zYWmmbX4lCV6vF+F+Cr+JyjPL6mER/x8tZJ0TM/D7hUN2mo75ma9fIAUxyStn6BRXGty3dtf9/2kCdTFWlPhI0Zlb0d8RMdk2vH1bpk+fh5PYibrOPaEDifLQOc5AAA==',
+  'platano-mano': 'data:image/webp;base64,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',
+  'sal-1kg': 'data:image/webp;base64,UklGRkwFAABXRUJQVlA4IEAFAACwFwCdASpQAFAAPpFAmkklpCIhKlYLSLASCWIAv2yc0ppxuXPSBt8buuj9H9F0qXuKT+TR4e97srtgz20PHeUAPE/z9KhSnrDtI8bfrJtG630V0pk7Hjt7GNFGgg3N25769mUqUhi0GQhbrI+FZQoqwXCCzmhdtK9g5dhA9hhxcXlsfF/yh/1BG5ZZsg8gQj0NFa1Z2aQdUcKV8oTtMjL6gtWjz1xnVs13q60FldWxgNp1iVJUVwyIX3sW5eXQ6C9aQ/Fc4oAA/v8SHAEYvk70O/9/6YCMhzhas0uLXWXjljojenPnoOiL/zc37oYEjpKJF3Ju8xUb+d5cnPSL+cUDKK1C8NxR50SibA7q6rephcBIS/jd6gXgYs6IYwvIFUddMxQ6F/JNLN4uaLZF5c5LZm81Qq7G1JjRKAKKHjHBh8SWp0BuEdxsXBxdz+kuxueVAgB8LS3OHXQ/iv7m0Pv6MjlxNrdzK1g2cwqiCAMAqe2XuQvsc9cdGxM0agM4YLKrjxDPjtEOYSp7cBmHrsXZG3BmV07gGNTWGREonNqylpWziC+FL4emnJa7pa7PPffepd5zICdhZGcs9xYNblpvWMTTv7BqCGQD0MtaU5dqp7fp7c0bTOlAaa3koicchnWdDYLkfcYiV2Wx8dZswlOyJ6yjHwt/2DKxItljSvaGum4vXtG6N/zNqiusTye6CgxtaSfzLdqviyO2Khe0YXSP9ZmSNhnLxFQ2Ho13FrmtwmJ3w8/KgH/ntJe7DHyrQ/XGv0T5GcPocs90EpmVN/MSG3hJkEf8W1mYCMSyGd7eGFBahWaXKHb+9dXies1TQXxxH28+EDmNZWiX6XAzM7mzj8tI5n2TtDiX8p7lyISLXiVnZzTkqhMa0k7CR5cDzsfdzdwz+pAaH63PDmQGqvTLpGqGH0BsTStuok5UG2mnnzIF31VePOgj03sbo+8u5Tg+kMxtgpWvS0Dby7d+tbt0zfVFUCeggS5n1vDCdYtGKWGP3Mr46cvNCqg2D1xaNKJ/yaNldyT2to46TYN8WisTMXsAQRI65YMqZRM/5T09iZx4MY+BNP8r2mM19VafN2JyovPMVE6H7iprRIhDDAfXJO1ARAKAvjMg81pGfqIV53VLI1WX2v1UBeln/pVtOVGXTvk4aCKpWMADp1Pz1UD+2VUgGBu3lWQV1hus9jyz9Jv5s6uBQK3343aaVnN6i8E094TnmDTORhQgEII9EYizgrvN8ziE/HkTPHUwyq4xJUdoVsZsajp0WsSIIX8Lq1mMW1TKPV3ecWwW7aTDhckfi+TVJnSxnDxMh5QsvP8nAuiWlm1HopCmhYof7f0cqBNZr/yU9wloku3GT61siDHi/g4mMec5KaNRbKRYzI/C25IfOU4mcDtb9cImI/8vJjTh91M3zx5bn8IS3MFgFr1BwOp354fLuI30gs9Nk/yd0/ka/78qD2xQl0m09ZQxng8fqBYsFxJu4T83oriyn3a2dXR2rqV4sXveCmYOPNF8dHomF28ad+AE5R9Sx71Si2FQYbO8DdlxYH633ZEhGKisQQ/BWZYXySumd7ghyzF34jhUHqV++a/P7N5plMM7QMqOHgo8sQrZ2A6DPv5V0Ml6v08jC3EzaayN2phqcG3NIyuYSbLe5wMbZARToGcfI28p6D0peXVyaPhuQZYRHwDUdlakXKfpoEj9WN52oINBMVNYjq/Fl2dHVxAFKKaWRmy3nKmfbu4Icfz+SW5qQaOgihMZyEncb0+w2bS2zlGZRRoHjp/8R6Vl6lwtPWQAAAA==',
+  'spaghetti-500g': 'data:image/webp;base64,UklGRiwCAABXRUJQVlA4ICACAADwCwCdASpQAFAAPpFAm0qlo6IhpTQLaLASCUAahrYXQG4i86rqVd5zyIS8r3nPaywdna9x+QgiEvMXDEBuZpHEa4KOWmXAggI7E/xPE1N7UUXrrMjuN9nYHJAEDLp4Hg5KuuO8etPjuAD++yIujpNwdAaacm83lN8D8W2x0JX01AuNW8gpbpCJ49buGZK2Gc/AfTSywSjuBHGW3J+MT7RzgzGmt/3HR7uSHA+TMgBzJoHhj/YIj1afzwS9mMqQPlc8aRiAqtWeXOlvsfNMLn6UI9TwqCSdVD7medRUi8UvZqP2XG+z8q8PoqpVXIvtI0L1lGPvlDNgbCHC7oXWZpD/eRlv7Q37KS/c3eyh/T/ob/NZF0Z7z0CD1iVuw5lzwy8iNvzDQaaa+y3xLeDBMg9JTQ/PVYcf0+4rbUuafebk56kOOT/OsLJxEAAgLsYOnje6pzxl52H62hUVrTSdG8kAey9S5NFyW63/K8ozsjdZ9ZZx8rMvDaptERIj1UehvQa/n/nsX63004z+caNk6z/15GZC+bG6fhdP26yrcM1SKkpEb/McfLtM/mwytyqfRiup1FswjXZ7EB94J1ERpnUMu+vtVYuRSJulBuq+26Las+QmpSMvbQejCu0GoJD6D9te/1bAY5KJ5Ok6gxsBj9cSt9JE3Im6UPkOezYMs0nM1ekMpnv3G2Yt2oO4Owf+0esvRePUSh4MqnOBupqEAAAA',
+  'yogurt-1-5l': 'data:image/webp;base64,UklGRuQBAABXRUJQVlA4INgBAADQCgCdASpQAFAAPpFGnEslo6KhopgLILASCWcAVVZ4DC/7JgyKap0ZuHtoriVVokpHds1Sad0Tu8dIuHH4vMHKYI41Vf2SZdDyvFRgC1Dh8Cyhry89GpQXupkt/rLSgAD++yIKYCuz6eDGAYPbNxNx9A8Uq+rhv2c4Utt/uYkdnimNri+S5EtVTVOaeKcKBZjCbx+z0J3OsqxF6Pofm/pKCdwNkTescd+M98jgAd14nUP/PV8rz7RyGNIikk1GJ1Mpqgzvwv17rRonNvO9e44G2PhBOnK7M2L0lOFFn5jSqqhFTBwRq+PEc8rr3eG2DumStSyVzjsuXLqOLRJhSURP4FXvP6D+Y2g/p2K/ByHyf28oufOezflIGDH1D1SrJm7NzyiaFdD1KbxvVFY17flCiWMVHis1xWuPr8s06ac7HN/miGeVjiyq5n9BZ3ytwrviIYEIvJ7PMmn0E88iHtF9rrEEEkS8ItuAxo9VBRW6g4fQ/y6qSDmDHL3hoiCnTt4jTYAMWfvwtwAv60+Y/FE7MQrB1Z9ZC1tgvPCRK906L2aKJuAiSC3DkHwQ/f3AmecDcQSAe+e0dOuZUD5m5qnkUkT0oCWkOtPDtUI2QyVVSHl7LovQAAAA',
+};
+
+// ============================================================
 // RENDER: CATÁLOGO
 // ============================================================
-let categoriaActiva = null; // null = mostrar solo categorías
+let categoriaActiva = null;
+let _animandoCatalogo = false; // bloquea re-renders durante animación
 
 function renderCategorias() {
-    // Emojis por nombre de categoría (insensible a mayúsculas)
     const emojis = {
-        'mercado':   '🛒',
-        'líquidos':  '💧',
-        'liquidos':  '💧',
+        'mercado':   '🍚',
+        'líquidos':  '🍺',
+        'liquidos':  '🍺',
         'frutas':    '🍎',
         'verduras':  '🥦',
         'panadería': '🍞',
@@ -1742,16 +1779,22 @@ function renderCategorias() {
     Object.keys(CATALOGO).forEach(cat => {
         const btn = document.createElement('button');
         btn.className = 'btn-categoria' + (cat === categoriaActiva ? ' activa' : '');
-        const emoji = emojis[cat.toLowerCase()] || '🏷️';
-        btn.innerHTML = `<span>${emoji}</span><span>${cat}</span>`;
+        // Limpiar el nombre: quitar emojis y espacios del inicio para buscar en el mapa
+        const nombreLimpio = cat.replace(/[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}\s]+/gu, '').toLowerCase().trim();
+        const emoji = emojis[nombreLimpio] || emojis[cat.toLowerCase().trim()] || '';
+        // Mostrar el nombre tal como viene de Sheets (con su propio emoji si lo tiene)
+        btn.innerHTML = `<span>${cat}</span>`;
         btn.onclick = async () => {
+            if (_animandoCatalogo) return; // evitar doble click durante animación
             const abriendo = categoriaActiva !== cat;
             categoriaActiva = categoriaActiva === cat ? null : cat;
 
             if (abriendo && categoriaActiva) {
-                renderCategorias();
-                await sincronizarForzado();
+                renderCategorias(); // actualiza estado activo inmediatamente
+                // Mostrar con datos en memoria AL INSTANTE, sin esperar red
                 mostrarProductos(categoriaActiva);
+                // Sincronizar en paralelo — si algo cambió, actualizar las cards
+                sincronizarForzado();
             } else {
                 renderCatalogo();
             }
@@ -1766,12 +1809,11 @@ function formatNum(n) {
 }
 
 function renderCatalogo() {
+    if (_animandoCatalogo) return; // no re-renderizar durante animación
     if (categoriaActiva) {
         renderCategorias();
         mostrarProductos(categoriaActiva);
     } else {
-        // Primero animar salida de productos, luego actualizar categorías
-        // Así la barra inferior no salta mientras los productos desaparecen
         ocultarProductos(() => renderCategorias());
     }
 }
@@ -1780,13 +1822,18 @@ function renderCatalogo() {
 function mostrarProductos(categoria) {
     const cont = document.getElementById('productos-container');
 
-    // Construir nuevo contenido en un fragment (fuera del DOM → sin flash)
+    // Construir en fragment — nunca toca el DOM hasta que todo está listo
     const fragment = document.createDocumentFragment();
-    CATALOGO[categoria].forEach(p => {
+    (CATALOGO[categoria] || []).forEach(p => {
         const card = document.createElement('div');
         card.className = 'producto-card';
         const agotado = p.stock === 0;
+        const imgSrc = PRODUCT_IMGS[p.id] || '';
+        const imgHtml = imgSrc
+            ? `<img src="${imgSrc}" alt="${p.nombre}" class="producto-thumb">`
+            : `<div style="width:52px;height:52px;flex-shrink:0"></div>`;
         card.innerHTML = `
+            ${imgHtml}
             <div class="producto-info">
                 <div class="producto-nombre">${p.nombre}</div>
                 <div class="producto-precio">${formatNum(p.precio)} CUP</div>
@@ -1808,29 +1855,56 @@ function mostrarProductos(categoria) {
         fragment.appendChild(card);
     });
 
-    // Swap atómico: vaciar y rellenar en el mismo frame, luego animar
+    // Swap atómico: limpiar y rellenar en un solo frame
+    _animandoCatalogo = true;
     cont.classList.remove('saliendo', 'entrando');
     cont.innerHTML = '';
     cont.appendChild(fragment);
-    // Forzar reflow para que la animación empiece desde cero
-    void cont.offsetHeight;
+    void cont.offsetHeight; // forzar reflow
     cont.classList.add('entrando');
-    setTimeout(() => cont.classList.remove('entrando'), 400);
+    setTimeout(() => {
+        cont.classList.remove('entrando');
+        _animandoCatalogo = false;
+    }, 320);
+}
+
+// Actualiza las cards existentes en el DOM sin destruirlas (para sync en background)
+function actualizarCardsEnDOM(categoria) {
+    if (!CATALOGO[categoria]) return;
+    CATALOGO[categoria].forEach(p => {
+        const card = document.querySelector(`#cant-${p.id}`)?.closest('.producto-card');
+        if (!card) return;
+        const agotado = p.stock === 0;
+        const precioEl = card.querySelector('.producto-precio');
+        const stockEl = card.querySelector('.producto-stock');
+        const btnMenos = card.querySelector(`[onclick="cambiarCant('${p.id}', -1)"]`);
+        const btnMas = card.querySelector(`[onclick="cambiarCant('${p.id}', 1)"]`);
+        const btnAgregar = card.querySelector(`[onclick="onAgregar('${p.id}')"]`);
+        if (precioEl) precioEl.textContent = `${formatNum(p.precio)} CUP`;
+        if (stockEl) {
+            stockEl.className = `producto-stock ${agotado ? 'agotado' : 'disponible'}`;
+            stockEl.textContent = agotado ? '⛔ Agotado' : '✅ Disponible';
+        }
+        if (btnMenos) btnMenos.disabled = agotado;
+        if (btnMas) btnMas.disabled = agotado;
+        if (btnAgregar) btnAgregar.disabled = agotado;
+    });
 }
 
 // Cierra los productos con animación de salida fluida
-// onDone: callback ejecutado cuando la animación termina
 function ocultarProductos(onDone) {
     const cont = document.getElementById('productos-container');
     if (!cont.children.length) {
         if (onDone) onDone();
         return;
     }
+    _animandoCatalogo = true;
     cont.classList.remove('entrando');
     cont.classList.add('saliendo');
     setTimeout(() => {
         cont.classList.remove('saliendo');
         cont.innerHTML = '';
+        _animandoCatalogo = false;
         if (onDone) onDone();
     }, 160);
 }
