@@ -298,51 +298,70 @@
         .productos-grid {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 16px;
             margin-bottom: 30px;
         }
 
         .producto-card {
             background: white;
             border-radius: var(--radio);
-            padding: 14px;
             box-shadow: var(--sombra);
+            overflow: hidden;
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+        }
+
+        .producto-img-wrap {
+            width: 100%;
+            height: 260px;
+            background: var(--gris-fondo);
+            overflow: hidden;
+            position: relative;
         }
 
         .producto-thumb {
-            width: 80px;
-            height: 80px;
-            border-radius: 10px;
-            object-fit: contain;
-            flex-shrink: 0;
-            background: var(--gris-fondo);
-            order: 3; /* imagen a la derecha */
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            transition: transform 0.35s ease;
         }
 
-        .producto-info { flex: 1; min-width: 0; }
+        .producto-card:hover .producto-thumb {
+            transform: scale(1.04);
+        }
+
+        .producto-thumb-placeholder {
+            font-size: 72px;
+            opacity: 0.18;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .producto-body {
+            padding: 16px 18px 18px;
+        }
+
+        .producto-info { margin-bottom: 14px; }
 
         .producto-nombre {
             font-weight: 700;
-            font-size: 14px;
+            font-size: 16px;
             color: #1e293b;
-            margin-bottom: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            margin-bottom: 6px;
         }
 
         .producto-precio {
-            font-size: 16px;
+            font-size: 26px;
             font-weight: 800;
             color: var(--azul);
+            margin-bottom: 5px;
         }
 
         .producto-stock {
-            font-size: 11px;
-            margin-top: 3px;
+            font-size: 12px;
             font-weight: 600;
         }
 
@@ -351,9 +370,9 @@
 
         .producto-controles {
             display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 8px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
         }
 
         .cantidad-controles {
@@ -2248,6 +2267,22 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Mostrar la página AHORA que la sección correcta ya está activa → sin flash
     document.body.style.opacity = '1';
+
+    // ── POLLING: verificar estado tienda cada 8s ──────────────
+    setInterval(async () => {
+        await cargarConfig();
+        const seccionActual = historial[historial.length - 1] || 'inicio';
+        const seccionesLibres = ['cerrada', 'mantenimiento', 'inicio', 'enviado', 'enviado-confirmado', 'enviado-rechazado'];
+        if (seccionesLibres.includes(seccionActual)) return;
+
+        if (!CONFIG.tienda_abierta) {
+            document.getElementById('msg-cerrada').textContent = CONFIG.mensaje_cierre;
+            irA('cerrada');
+        } else if (CONFIG.mantenimiento) {
+            document.getElementById('msg-mantenimiento').textContent = CONFIG.mensaje_mantenimiento;
+            irA('mantenimiento');
+        }
+    }, 8000);
 });
 </script>
 </body>
