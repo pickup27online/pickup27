@@ -6,7 +6,7 @@
     <title>Pick-Up 27 — Tienda Comunitaria</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         /* ============================================================
            TOKENS
@@ -30,8 +30,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Cormorant Garamond', -apple-system, BlinkMacSystemFont, 'Segoe UI', serif;
-            font-weight: 400;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-weight: 500;
             background: var(--gris-fondo);
             min-height: 100vh;
             color: #1e293b;
@@ -258,12 +258,11 @@
         }
 
         .inicio-titulo {
-            font-size: 36px;
-            font-weight: 500;
+            font-size: 38px;
+            font-weight: 700;
             color: var(--azul);
-            letter-spacing: 0.5px;
+            letter-spacing: -0.5px;
             margin-bottom: 18px;
-            font-style: italic;
         }
 
         .inicio-descripcion {
@@ -933,6 +932,47 @@
         .btn-cerrar-drawer:hover { background: var(--azul-claro); }
 
         /* ============================================================
+           SPLASH DE CARGA
+        ============================================================ */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--azul);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease;
+        }
+
+        #splash-screen.oculto {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .splash-logo {
+            width: 130px;
+            height: 130px;
+            margin-bottom: 18px;
+            filter: drop-shadow(0 6px 20px rgba(0,0,0,0.25));
+            animation: splashPulse 1.6s ease-in-out infinite;
+        }
+
+        .splash-subtitulo {
+            color: rgba(255,255,255,0.85);
+            font-size: 16px;
+            font-weight: 500;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        @keyframes splashPulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.04); opacity: 0.92; }
+        }
+
+        /* ============================================================
            RESPONSIVE
         ============================================================ */
         @media (max-width: 400px) {
@@ -943,6 +983,18 @@
     </style>
 </head>
 <body>
+
+<!-- ============================================================
+     SPLASH DE CARGA — logo + "Tienda Comunitaria"
+============================================================ -->
+<div id="splash-screen">
+    <svg class="splash-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="100" cy="100" r="95" fill="#1a3a6b" stroke="#e2e8f0" stroke-width="4"/>
+        <text x="100" y="108" font-size="78" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial, sans-serif">27</text>
+        <text x="100" y="150" font-size="22" font-weight="bold" text-anchor="middle" fill="white" font-family="Arial, sans-serif" letter-spacing="2">PICK-UP</text>
+    </svg>
+    <div class="splash-subtitulo">Tienda Comunitaria</div>
+</div>
 
 <!-- MODAL CONFIRMAR AGREGAR -->
 <div class="modal-overlay" id="modal-agregar">
@@ -1251,6 +1303,11 @@ function actualizarNavBar(seccion) {
         const el = document.getElementById('nav-' + s);
         if (el) el.classList.toggle('activo', s === seccion);
     });
+    // El botón de Carrito en la nav-bar solo aparece en Catálogo y Carrito, no en Inicio
+    const navCarritoBtn = document.getElementById('nav-carrito');
+    if (navCarritoBtn) {
+        navCarritoBtn.style.display = (seccion === 'catalogo' || seccion === 'carrito') ? 'flex' : 'none';
+    }
     // nav badge
     const n = obtenerCantidadTotal ? obtenerCantidadTotal() : 0;
     const nb = document.getElementById('nav-badge');
@@ -1926,12 +1983,9 @@ function entrarCategoria(cat) {
     if (_animandoCatalogo) return;
     categoriaActiva = cat;
     actualizarHeaderCatalogo();
-    // Mostrar solo la tarjeta de la categoría seleccionada, con su botón en "Salir"
+    // Ocultar completamente las tarjetas de categorías: solo se ven los productos
     const contCats = document.getElementById('categorias-container');
-    if (contCats) {
-        contCats.innerHTML = '';
-        contCats.appendChild(crearCardCategoria(cat));
-    }
+    if (contCats) contCats.innerHTML = '';
     mostrarProductos(cat);
     sincronizarForzado();
 }
@@ -1975,7 +2029,7 @@ function renderCatalogo() {
     if (categoriaActiva) {
         actualizarHeaderCatalogo();
         const contCats = document.getElementById('categorias-container');
-        if (contCats) { contCats.innerHTML = ''; contCats.appendChild(crearCardCategoria(categoriaActiva)); }
+        if (contCats) contCats.innerHTML = '';
         mostrarProductos(categoriaActiva);
     } else {
         actualizarHeaderCatalogo();
@@ -2372,7 +2426,17 @@ function volverCarritoSinAgotado() {
 // ============================================================
 // INICIALIZAR
 // ============================================================
+
+// Decide si se debe mostrar el splash: siempre al recargar la página,
+// o si pasaron más de 3 minutos desde la última vez que la pestaña estuvo activa.
+function ocultarSplash() {
+    const splash = document.getElementById('splash-screen');
+    if (splash) splash.classList.add('oculto');
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
+    const inicioCarga = Date.now();
+    const TIEMPO_MIN_SPLASH = 600; // ms — para que no sea un parpadeo
 
     // Cargar configuración primero
     await cargarConfig();
@@ -2382,6 +2446,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('msg-cerrada').textContent = CONFIG.mensaje_cierre;
         irA('cerrada');
         document.body.style.opacity = '1';
+        const transcurrido = Date.now() - inicioCarga;
+        setTimeout(ocultarSplash, Math.max(0, TIEMPO_MIN_SPLASH - transcurrido));
         return;
     }
 
@@ -2389,6 +2455,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('msg-mantenimiento').textContent = CONFIG.mensaje_mantenimiento;
         irA('mantenimiento');
         document.body.style.opacity = '1';
+        const transcurrido = Date.now() - inicioCarga;
+        setTimeout(ocultarSplash, Math.max(0, TIEMPO_MIN_SPLASH - transcurrido));
         return;
     }
 
@@ -2425,6 +2493,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Mostrar la página AHORA que la sección correcta ya está activa → sin flash
     document.body.style.opacity = '1';
+    const transcurrido = Date.now() - inicioCarga;
+    setTimeout(ocultarSplash, Math.max(0, TIEMPO_MIN_SPLASH - transcurrido));
+});
+
+// ============================================================
+// SPLASH AL VOLVER TRAS INACTIVIDAD
+// Si la pestaña estuvo oculta (background) por más de 3 minutos,
+// mostrar de nuevo el splash al regresar — como si fuera una nueva apertura.
+// ============================================================
+const TIEMPO_INACTIVIDAD_SPLASH = 3 * 60 * 1000; // 3 minutos
+let _momentoOculto = null;
+
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        _momentoOculto = Date.now();
+    } else if (_momentoOculto) {
+        const ausente = Date.now() - _momentoOculto;
+        _momentoOculto = null;
+        if (ausente >= TIEMPO_INACTIVIDAD_SPLASH) {
+            const splash = document.getElementById('splash-screen');
+            if (splash) {
+                splash.classList.remove('oculto');
+                setTimeout(() => splash.classList.add('oculto'), 1100);
+            }
+            // Re-sincronizar datos al volver, ya que pudo pasar tiempo
+            if (typeof sincronizarForzado === 'function') sincronizarForzado();
+        }
+    }
 });
 </script>
 </body>
