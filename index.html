@@ -85,6 +85,13 @@
             gap: 10px;
             min-width: 0;
             flex: 1;
+            overflow: hidden;
+        }
+
+        .header-left > div {
+            min-width: 0;
+            flex: 1;
+            overflow: hidden;
         }
 
         .btn-back {
@@ -110,6 +117,8 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            display: block;
+            width: 100%;
         }
 
         .header-subtitulo {
@@ -560,6 +569,11 @@
         /* ============================================================
            AVISO PRECIOS TIEMPO REAL
         ============================================================ */
+        .btn-atras-abajo {
+            margin-top: 6px;
+            margin-bottom: 4px;
+        }
+
         .aviso-precios {
             background: var(--gris-fondo);
             border-top: 1px solid var(--gris-borde);
@@ -924,13 +938,9 @@
             <div class="header-subtitulo" id="header-sub">Tienda Comunitaria</div>
         </div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         <button class="btn-notif-ayuda" id="btn-notif-ayuda" onclick="abrirDrawerNotif()">
             🔔 Notificaciones
-        </button>
-        <button class="btn-carrito-header" onclick="irA('carrito')" id="btn-header-carrito" style="display:none;">
-            🛒
-            <span class="badge-carrito" id="badge-carrito"></span>
         </button>
     </div>
 </header>
@@ -1577,12 +1587,7 @@ function actualizarHeader(seccion) {
     if (mainTitleEl && seccion !== 'catalogo') { mainTitleEl.textContent = 'Pick-Up 27'; }
     if (seccion !== 'catalogo') { const bb = document.getElementById('btn-back-catalogo'); if(bb) bb.style.display='none'; }
 
-    // Ocultar botones en secciones bloqueadas
-    const bloqueada = seccion === 'cerrada' || seccion === 'mantenimiento';
-    document.getElementById('btn-header-carrito').style.display =
-        (!bloqueada && seccion !== 'inicio' && seccion !== 'enviado' &&
-         seccion !== 'enviado-confirmado' && seccion !== 'enviado-rechazado')
-        ? 'inline-flex' : 'none';
+    // (El botón de carrito en el header fue eliminado; el carrito vive solo en la nav-bar inferior)
 
     // Botón de ayuda notificaciones: solo en confirmación
     // y solo si el permiso está bloqueado o no concedido aún
@@ -1653,13 +1658,12 @@ function obtenerCantidadTotal() {
 }
 
 function actualizarBadge() {
+    // El contador de carrito vive en la barra de navegación inferior (nav-badge)
     const n = obtenerCantidadTotal();
-    const badge = document.getElementById('badge-carrito');
-    if (n > 0) {
-        badge.textContent = n;
-        badge.style.display = 'flex';
-    } else {
-        badge.style.display = 'none';
+    const nb = document.getElementById('nav-badge');
+    if (nb) {
+        nb.textContent = n;
+        nb.style.display = n > 0 ? 'flex' : 'none';
     }
 }
 
@@ -1879,6 +1883,8 @@ function entrarCategoria(cat) {
     if (_animandoCatalogo) return;
     categoriaActiva = cat;
     actualizarHeaderCatalogo();
+    const contCats = document.getElementById('categorias-container');
+    if (contCats) contCats.innerHTML = '';
     mostrarProductos(cat);
     sincronizarForzado();
 }
@@ -1919,6 +1925,8 @@ function renderCatalogo() {
     if (_animandoCatalogo) return;
     if (categoriaActiva) {
         actualizarHeaderCatalogo();
+        const contCats = document.getElementById('categorias-container');
+        if (contCats) contCats.innerHTML = '';
         mostrarProductos(categoriaActiva);
     } else {
         actualizarHeaderCatalogo();
@@ -1966,6 +1974,7 @@ function crearCardProducto(p) {
 // Muestra productos con animación de entrada — sin flash
 function mostrarProductos(categoria) {
     const cont = document.getElementById('productos-container');
+    const contCats = document.getElementById('categorias-container');
 
     // Construir en fragment — nunca toca el DOM hasta que todo está listo
     const fragment = document.createDocumentFragment();
@@ -1973,6 +1982,15 @@ function mostrarProductos(categoria) {
         const card = crearCardProducto(p);
         fragment.appendChild(card);
     });
+    // Botón "Atrás" al final de la lista, para no tener que subir hasta arriba
+    const btnAtrasAbajo = document.createElement('button');
+    btnAtrasAbajo.className = 'btn-secondary btn-atras-abajo';
+    btnAtrasAbajo.innerHTML = '← Volver a categorías';
+    btnAtrasAbajo.onclick = volverACategorias;
+    fragment.appendChild(btnAtrasAbajo);
+
+    // Ocultar las tarjetas de categorías mientras se ve una categoría
+    if (contCats) contCats.innerHTML = '';
 
     // Swap atómico: limpiar y rellenar en un solo frame
     _animandoCatalogo = true;
@@ -2081,12 +2099,26 @@ function filtrarProductos(query) {
     const filtrados = q ? prods.filter(p => p.nombre.toLowerCase().includes(q)) : prods;
     // Re-render with filtered list
     const cont = document.getElementById('productos-container');
-    cont.innerHTML = '';
     const fragment = document.createDocumentFragment();
-    filtrados.forEach(p => {
-        const card = crearCardProducto(p);
-        fragment.appendChild(card);
-    });
+    if (filtrados.length === 0) {
+        const vacio = document.createElement('div');
+        vacio.style.textAlign = 'center';
+        vacio.style.padding = '30px 10px';
+        vacio.style.color = 'var(--gris-texto)';
+        vacio.style.fontSize = '14px';
+        vacio.textContent = 'No encontramos productos con ese nombre.';
+        fragment.appendChild(vacio);
+    } else {
+        filtrados.forEach(p => {
+            const card = crearCardProducto(p);
+            fragment.appendChild(card);
+        });
+    }
+    const btnAtrasAbajo = document.createElement('button');
+    btnAtrasAbajo.className = 'btn-secondary btn-atras-abajo';
+    btnAtrasAbajo.innerHTML = '← Volver a categorías';
+    btnAtrasAbajo.onclick = volverACategorias;
+    fragment.appendChild(btnAtrasAbajo);
     cont.innerHTML = '';
     cont.appendChild(fragment);
 }
