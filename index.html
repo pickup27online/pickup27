@@ -943,7 +943,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: opacity 0.4s ease;
+            transition: opacity 0.55s ease;
         }
 
         #splash-screen.oculto {
@@ -1543,11 +1543,11 @@ async function _sincronizarInterno() {
 
     // 7. Re-renderizar la vista actual si corresponde
     if (seccionActual === 'catalogo') {
-        // Si hay una categoría abierta, actualizar las cards en DOM sin destruirlas
-        // Esto evita el flash y es inmediato
+        // Si hay una categoría abierta, solo actualizar sus productos en el DOM.
+        // NUNCA volver a pintar categorias-container aquí, porque debe permanecer vacío
+        // mientras una categoría esté abierta (si no, las tarjetas tapan los productos).
         if (categoriaActiva) {
             actualizarCardsEnDOM(categoriaActiva);
-            renderCategorias(); // actualizar estado activo de botones
         } else {
             renderCategorias();
         }
@@ -2436,7 +2436,7 @@ function ocultarSplash() {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const inicioCarga = Date.now();
-    const TIEMPO_MIN_SPLASH = 600; // ms — para que no sea un parpadeo
+    const TIEMPO_MIN_SPLASH = 1800; // ms — para que el logo se vea con calma, no un parpadeo
 
     // Cargar configuración primero
     await cargarConfig();
@@ -2515,7 +2515,7 @@ document.addEventListener('visibilitychange', () => {
             const splash = document.getElementById('splash-screen');
             if (splash) {
                 splash.classList.remove('oculto');
-                setTimeout(() => splash.classList.add('oculto'), 1100);
+                setTimeout(() => splash.classList.add('oculto'), 1800);
             }
             // Re-sincronizar datos al volver, ya que pudo pasar tiempo
             if (typeof sincronizarForzado === 'function') sincronizarForzado();
