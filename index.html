@@ -410,18 +410,31 @@
             gap: 5px;
         }
 
-        .cat-card-arrow {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
+        .cat-card-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: transparent;
+            color: var(--azul);
+            border: 1.5px solid var(--azul);
+            padding: 8px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .cat-card-btn:hover {
             background: var(--azul);
             color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 16px;
-            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(26,58,107,0.15);
+        }
+
+        .cat-card-btn:active {
+            transform: scale(0.96);
         }
 
         .cat-banner {
@@ -463,6 +476,21 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-bottom: 20px;
+            /* Scroll independiente: evita que el scroll "atraviese" a categorías */
+            overscroll-behavior: contain;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Cuando hay categoría activa, el body no scrollea — solo el contenedor */
+        body.cat-abierta {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        body.cat-abierta .main {
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+            overscroll-behavior: contain;
         }
 
         .producto-card {
@@ -569,6 +597,95 @@
 
         .btn-agregar-circular:hover { background: var(--azul-claro); transform: scale(1.05); }
         .btn-agregar-circular:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
+
+        /* Menú popup de cantidad */
+        .cantidad-popup {
+            position: absolute;
+            bottom: 52px;
+            right: 0;
+            background: white;
+            border-radius: var(--radio);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15), 0 0 0 1px var(--gris-borde);
+            padding: 10px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(8px) scale(0.95);
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            min-width: 110px;
+        }
+
+        .cantidad-popup.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: all;
+        }
+
+        .cantidad-popup-fila {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cantidad-popup-valor {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--azul);
+            min-width: 28px;
+            text-align: center;
+        }
+
+        .cantidad-popup-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid var(--gris-borde);
+            background: white;
+            color: var(--azul);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        .cantidad-popup-btn:hover { background: var(--gris-fondo); }
+        .cantidad-popup-btn:active { transform: scale(0.92); background: var(--azul-claro); color: white; border-color: var(--azul-claro); }
+
+        .cantidad-popup-agregar {
+            width: 100%;
+            background: var(--azul);
+            color: white;
+            border: none;
+            padding: 8px 0;
+            border-radius: var(--radio-sm);
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.2s;
+            text-align: center;
+            letter-spacing: 0.5px;
+        }
+
+        .cantidad-popup-agregar:hover { background: var(--azul-claro); }
+
+        /* Overlay para cerrar al tocar fuera */
+        .popup-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 9;
+            display: none;
+        }
+
+        .popup-overlay.visible { display: block; }
 
         .cantidad-controles-grid {
             display: flex;
@@ -2084,6 +2201,7 @@ function crearCardCategoria(cat) {
 function entrarCategoria(cat) {
     if (_animandoCatalogo) return;
     categoriaActiva = cat;
+    document.body.classList.add('cat-abierta');
     actualizarHeaderCatalogo();
     // Ocultar completamente las tarjetas de categorías: solo se ven los productos
     const contCats = document.getElementById('categorias-container');
@@ -2112,6 +2230,7 @@ function actualizarHeaderCatalogo() {
 
 function volverACategorias() {
     categoriaActiva = null;
+    document.body.classList.remove('cat-abierta');
     actualizarHeaderCatalogo();
     const cont = document.getElementById('productos-container');
     if (_animandoCatalogo) { setTimeout(volverACategorias, 100); return; }
@@ -2124,6 +2243,67 @@ function volverACategorias() {
 // Formatea números con coma como separador de miles: 1680 → 1,680
 function formatNum(n) {
     return Number(n).toLocaleString('en-US');
+}
+
+let _popupAbierto = null;
+
+function abrirPopupCantidad(id, btn) {
+    // Cerrar popup anterior si existe
+    if (_popupAbierto && _popupAbierto !== id) {
+        const prev = document.getElementById('popup-' + _popupAbierto);
+        if (prev) prev.classList.remove('visible');
+    }
+    const popup = document.getElementById('popup-' + id);
+    if (!popup) return;
+    // Resetear cantidad a 1
+    const valEl = document.getElementById('popup-val-' + id);
+    if (valEl) valEl.textContent = '1';
+    popup.classList.add('visible');
+    _popupAbierto = id;
+    // Crear overlay si no existe
+    let overlay = document.getElementById('popup-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'popup-overlay';
+        overlay.className = 'popup-overlay';
+        overlay.onclick = cerrarTodosPopups;
+        document.body.appendChild(overlay);
+    }
+    overlay.classList.add('visible');
+}
+
+function popupCambiar(id, delta) {
+    const valEl = document.getElementById('popup-val-' + id);
+    if (!valEl) return;
+    let val = parseInt(valEl.textContent) || 1;
+    val = Math.max(1, val + delta);
+    valEl.textContent = val;
+}
+
+function popupAgregar(id) {
+    const valEl = document.getElementById('popup-val-' + id);
+    const cantidad = parseInt(valEl?.textContent) || 1;
+    // Agregar al carrito con la cantidad seleccionada
+    const producto = buscarProducto(id);
+    if (!producto) return;
+    const carrito = obtenerCarrito();
+    if (carrito[id]) {
+        carrito[id].cantidad += cantidad;
+    } else {
+        carrito[id] = { nombre: producto.nombre, precio: producto.precio, cantidad };
+    }
+    guardarCarrito(carrito);
+    toast(producto.nombre + ' × ' + cantidad + ' agregado');
+    cerrarTodosPopups();
+    // Re-renderizar para mostrar controles de cantidad
+    if (categoriaActiva) mostrarProductos(categoriaActiva);
+}
+
+function cerrarTodosPopups() {
+    document.querySelectorAll('.cantidad-popup.visible').forEach(p => p.classList.remove('visible'));
+    const overlay = document.getElementById('popup-overlay');
+    if (overlay) overlay.classList.remove('visible');
+    _popupAbierto = null;
 }
 
 function mostrarBannerCategoria(cat) {
@@ -2191,7 +2371,7 @@ function crearCardProducto(p) {
     } else if (enCarrito) {
         card.innerHTML = `${imgHtml}<div class="producto-info"><div class="producto-badges">${badgesHtml}</div><div class="producto-nombre">${p.nombre}</div>${pesoHtml}<div class="producto-precio">${formatNum(p.precio)} CUP</div>${stockText}</div><div class="cantidad-controles-grid"><button class="btn-cant-grid" onclick="cambiarCant('${p.id}', -1)">−</button><span class="cant-valor-grid" id="cant-${p.id}">${cantidad}</span><button class="btn-cant-grid" onclick="cambiarCant('${p.id}', 1)">+</button></div>`;
     } else {
-        card.innerHTML = `${imgHtml}<div class="producto-info"><div class="producto-badges">${badgesHtml}</div><div class="producto-nombre">${p.nombre}</div>${pesoHtml}<div class="producto-precio">${formatNum(p.precio)} CUP</div>${stockText}</div><button class="btn-agregar-circular" onclick="onAgregar('${p.id}')">+</button>`;
+        card.innerHTML = `${imgHtml}<div class="producto-info"><div class="producto-badges">${badgesHtml}</div><div class="producto-nombre">${p.nombre}</div>${pesoHtml}<div class="producto-precio">${formatNum(p.precio)} CUP</div>${stockText}</div><div style="position:relative"><button class="btn-agregar-circular" onclick="abrirPopupCantidad('${p.id}', this)">+</button><div class="cantidad-popup" id="popup-${p.id}"><div class="cantidad-popup-fila"><button class="cantidad-popup-btn" onclick="popupCambiar('${p.id}', -1)">−</button><span class="cantidad-popup-valor" id="popup-val-${p.id}">1</span><button class="cantidad-popup-btn" onclick="popupCambiar('${p.id}', 1)">+</button></div><button class="cantidad-popup-agregar" onclick="popupAgregar('${p.id}')">Agregar</button></div></div>`;
     }
     return card;
 }
@@ -2206,12 +2386,7 @@ function mostrarProductos(categoria) {
         const card = crearCardProducto(p);
         fragment.appendChild(card);
     });
-    // Botón "Salir" al final de la lista, para no tener que subir hasta arriba
-    const btnSalirAbajo = document.createElement('button');
-    btnSalirAbajo.className = 'btn-secondary btn-atras-abajo';
-    btnSalirAbajo.innerHTML = 'Salir';
-    btnSalirAbajo.onclick = volverACategorias;
-    fragment.appendChild(btnSalirAbajo);
+
 
     // Swap atómico: limpiar y rellenar en un solo frame
     _animandoCatalogo = true;
