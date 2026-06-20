@@ -81,6 +81,18 @@
             z-index: 100;
             box-shadow: 0 2px 12px rgba(26,58,107,0.18);
             min-height: 60px;
+            transition: background 0.3s ease;
+        }
+
+        .header.sincronizando {
+            background: linear-gradient(90deg, var(--azul) 0%, var(--azul-claro) 50%, var(--azul) 100%);
+            background-size: 200% 100%;
+            animation: sincroPulse 1s ease infinite;
+        }
+
+        @keyframes sincroPulse {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
         }
 
         .header-left {
@@ -1485,12 +1497,16 @@ async function verificarStockRecuperado(stockPrevio) {
 // Throttle de 1s. Config y catálogo en paralelo.
 // ============================================================
 let _ultimaSincro = 0;
-const SINCRO_THROTTLE_MS = 1_000;
+const SINCRO_THROTTLE_MS = 300;
 
 async function sincronizar() {
     const ahora = Date.now();
     if (ahora - _ultimaSincro < SINCRO_THROTTLE_MS) return;
+    // Mostrar indicador sutil
+    document.getElementById('header').classList.add('sincronizando');
     await _sincronizarInterno();
+    // Ocultar indicador
+    document.getElementById('header').classList.remove('sincronizando');
 }
 
 async function sincronizarForzado() {
