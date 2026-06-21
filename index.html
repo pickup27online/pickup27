@@ -491,6 +491,12 @@
             overflow-y: auto;
             height: calc(100vh - 60px);
             overscroll-behavior: contain;
+            padding-bottom: 90px; /* espacio extra para nav bar + margen */
+        }
+
+        /* Asegurar que el grid de productos también tenga padding inferior */
+        .productos-grid {
+            padding-bottom: 20px;
         }
 
         .producto-card {
@@ -659,6 +665,20 @@
 
         .cantidad-popup-btn:hover { background: var(--gris-fondo); }
         .cantidad-popup-btn:active { transform: scale(0.92); background: var(--azul-claro); color: white; border-color: var(--azul-claro); }
+
+        /* Prevenir selección de texto/imagen en productos y popup */
+        .producto-card, .cantidad-popup, .cantidad-popup-btn, .btn-agregar-circular, .btn-cant-grid {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+            touch-action: manipulation;
+        }
+
+        .producto-thumb {
+            -webkit-user-select: none;
+            user-select: none;
+            pointer-events: none; /* evita menú contextual de imagen */
+        }
 
         .cantidad-popup-agregar {
             width: 100%;
@@ -1192,7 +1212,7 @@
         }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false">
 
 <!-- ============================================================
      SPLASH DE CARGA — logo + "Tienda Comunitaria"
@@ -1708,9 +1728,14 @@ const SINCRO_THROTTLE_MS = 300;
 async function sincronizar() {
     const ahora = Date.now();
     if (ahora - _ultimaSincro < SINCRO_THROTTLE_MS) return;
-    document.getElementById('header').classList.add('sincronizando');
+    const header = document.getElementById('header');
+    header.classList.add('sincronizando');
     await _sincronizarInterno();
-    document.getElementById('header').classList.remove('sincronizando');
+    // Esperar a que la animación del gradiente complete su ciclo antes de quitar la clase
+    // así evitamos el flash visual
+    setTimeout(() => {
+        header.classList.remove('sincronizando');
+    }, 600);
 }
 
 async function sincronizarForzado() {
@@ -2178,13 +2203,30 @@ function renderCategorias() {
 function crearCardCategoria(cat) {
     const count = (CATALOGO[cat] || []).length;
     const imgSrc = CAT_IMGS[cat] || '';
-    const activa = categoriaActiva === cat;
     const div = document.createElement('div');
     div.className = 'cat-card';
     div.dataset.cat = cat;
+    div.onclick = () => entrarCategoria(cat);
     div.innerHTML = `
         <div class="cat-card-img" style="${imgSrc ? 'background-image:url(' + imgSrc + ')' : ''}">
             ${!imgSrc ? '<span class="cat-card-emoji">🛒</span>' : ''}
+        </div>
+        <div class="cat-card-body">
+            <div class="cat-card-info">
+                <div class="cat-card-nombre">${cat}</div>
+                <div class="cat-card-count">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+                    ${count} producto${count !== 1 ? 's' : ''}
+                </div>
+            </div>
+            <div class="cat-card-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                Entrar
+            </div>
+        </div>
+    `;
+    return div;
+}
         </div>
         <div class="cat-card-body">
             <div class="cat-card-nombre">${cat}</div>
@@ -2247,26 +2289,38 @@ function formatNum(n) {
 
 let _popupAbierto = null;
 
-function abrirPopupCantidad(id, btn) {
-    // Cerrar popup anterior si existe
+function abrirPopupCantidad(id, btn, esCarrito, event) {
+    // Si hay un evento, detener propagación para que no llegue al overlay
+    if (event && event.stopPropagation) {
+        event.stopPropagation();
+    }
+    // Cerrar popup anterior si existe (diferente al nuevo)
     if (_popupAbierto && _popupAbierto !== id) {
         const prev = document.getElementById('popup-' + _popupAbierto);
         if (prev) prev.classList.remove('visible');
     }
     const popup = document.getElementById('popup-' + id);
     if (!popup) return;
-    // Resetear cantidad a 1
     const valEl = document.getElementById('popup-val-' + id);
-    if (valEl) valEl.textContent = '1';
+    if (valEl) {
+        if (esCarrito) {
+            const carrito = obtenerCarrito();
+            valEl.textContent = (carrito[id]?.cantidad || 1).toString();
+        } else {
+            valEl.textContent = '1';
+        }
+    }
     popup.classList.add('visible');
     _popupAbierto = id;
-    // Crear overlay si no existe
     let overlay = document.getElementById('popup-overlay');
     if (!overlay) {
         overlay = document.createElement('div');
         overlay.id = 'popup-overlay';
         overlay.className = 'popup-overlay';
-        overlay.onclick = cerrarTodosPopups;
+        // Solo cerrar si el clic es directamente en el overlay (no en hijos)
+        overlay.onclick = function(e) {
+            if (e.target === overlay) cerrarTodosPopups();
+        };
         document.body.appendChild(overlay);
     }
     overlay.classList.add('visible');
@@ -2283,7 +2337,6 @@ function popupCambiar(id, delta) {
 function popupAgregar(id) {
     const valEl = document.getElementById('popup-val-' + id);
     const cantidad = parseInt(valEl?.textContent) || 1;
-    // Agregar al carrito con la cantidad seleccionada
     const producto = buscarProducto(id);
     if (!producto) return;
     const carrito = obtenerCarrito();
@@ -2295,8 +2348,24 @@ function popupAgregar(id) {
     guardarCarrito(carrito);
     toast(producto.nombre + ' × ' + cantidad + ' agregado');
     cerrarTodosPopups();
-    // Re-renderizar para mostrar controles de cantidad
     if (categoriaActiva) mostrarProductos(categoriaActiva);
+}
+
+function popupActualizarCarrito(id) {
+    const valEl = document.getElementById('popup-val-' + id);
+    const cantidad = parseInt(valEl?.textContent) || 1;
+    const carrito = obtenerCarrito();
+    if (!carrito[id]) return;
+    if (cantidad <= 0) {
+        quitarItem(id);
+    } else {
+        carrito[id].cantidad = cantidad;
+        guardarCarrito(carrito);
+        toast(carrito[id].nombre + ' actualizado: ' + cantidad + ' unid');
+    }
+    cerrarTodosPopups();
+    renderCarrito();
+    actualizarBadge();
 }
 
 function cerrarTodosPopups() {
@@ -2371,7 +2440,7 @@ function crearCardProducto(p) {
     } else if (enCarrito) {
         card.innerHTML = `${imgHtml}<div class="producto-info"><div class="producto-badges">${badgesHtml}</div><div class="producto-nombre">${p.nombre}</div>${pesoHtml}<div class="producto-precio">${formatNum(p.precio)} CUP</div>${stockText}</div><div class="cantidad-controles-grid"><button class="btn-cant-grid" onclick="cambiarCant('${p.id}', -1)">−</button><span class="cant-valor-grid" id="cant-${p.id}">${cantidad}</span><button class="btn-cant-grid" onclick="cambiarCant('${p.id}', 1)">+</button></div>`;
     } else {
-        card.innerHTML = `${imgHtml}<div class="producto-info"><div class="producto-badges">${badgesHtml}</div><div class="producto-nombre">${p.nombre}</div>${pesoHtml}<div class="producto-precio">${formatNum(p.precio)} CUP</div>${stockText}</div><div style="position:relative"><button class="btn-agregar-circular" onclick="abrirPopupCantidad('${p.id}', this)">+</button><div class="cantidad-popup" id="popup-${p.id}"><div class="cantidad-popup-fila"><button class="cantidad-popup-btn" onclick="popupCambiar('${p.id}', -1)">−</button><span class="cantidad-popup-valor" id="popup-val-${p.id}">1</span><button class="cantidad-popup-btn" onclick="popupCambiar('${p.id}', 1)">+</button></div><button class="cantidad-popup-agregar" onclick="popupAgregar('${p.id}')">Agregar</button></div></div>`;
+        card.innerHTML = `${imgHtml}<div class="producto-info"><div class="producto-badges">${badgesHtml}</div><div class="producto-nombre">${p.nombre}</div>${pesoHtml}<div class="producto-precio">${formatNum(p.precio)} CUP</div>${stockText}</div><div style="position:relative"><button class="btn-agregar-circular" onclick="abrirPopupCantidad('${p.id}', this, false, event)">+</button><div class="cantidad-popup" id="popup-${p.id}"><div class="cantidad-popup-fila"><button class="cantidad-popup-btn" onclick="popupCambiar('${p.id}', -1)">−</button><span class="cantidad-popup-valor" id="popup-val-${p.id}">1</span><button class="cantidad-popup-btn" onclick="popupCambiar('${p.id}', 1)">+</button></div><button class="cantidad-popup-agregar" onclick="popupAgregar('${p.id}')">Agregar</button></div></div>`;
     }
     return card;
 }
@@ -2562,6 +2631,7 @@ function renderCarrito() {
         const subtotal = item.precio * item.cantidad;
         const div = document.createElement('div');
         div.className = 'item-carrito';
+        div.style.position = 'relative';
         div.innerHTML = `
             <div class="item-carrito-fila1">
                 <div>
@@ -2571,12 +2641,20 @@ function renderCarrito() {
                 <div class="item-subtotal" data-carrito-id="${id}" data-tipo="subtotal">${formatNum(subtotal)} CUP</div>
             </div>
             <div class="item-carrito-fila2">
-                <div class="cantidad-controles">
-                    <button class="btn-cant" onclick="cambiarCantCarrito('${id}', -1)">−</button>
-                    <span class="cant-valor" data-carrito-id="${id}" data-tipo="cant">${item.cantidad}</span>
-                    <button class="btn-cant" onclick="cambiarCantCarrito('${id}', 1)">+</button>
+                <div style="position:relative">
+                    <button class="btn-cant" onclick="abrirPopupCantidad('${id}', this, true, event)">
+                        <span data-carrito-id="${id}" data-tipo="cant">${item.cantidad}</span> unid
+                    </button>
+                    <div class="cantidad-popup" id="popup-${id}">
+                        <div class="cantidad-popup-fila">
+                            <button class="cantidad-popup-btn" onclick="popupCambiar('${id}', -1)">−</button>
+                            <span class="cantidad-popup-valor" id="popup-val-${id}">${item.cantidad}</span>
+                            <button class="cantidad-popup-btn" onclick="popupCambiar('${id}', 1)">+</button>
+                        </div>
+                        <button class="cantidad-popup-agregar" onclick="popupActualizarCarrito('${id}')">Actualizar</button>
+                    </div>
                 </div>
-                <button class="btn-eliminar" onclick="quitarItem('${id}')">🗑 Vaciar</button>
+                <button class="btn-eliminar" onclick="quitarItem('${id}')">Vaciar</button>
             </div>
         `;
         cont.appendChild(div);
