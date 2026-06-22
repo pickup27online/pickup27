@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pick-up 27 — Tu mercado en línea</title>
+  <title>Pick-up 27</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -44,8 +44,7 @@
     .hero-bg {
       background: linear-gradient(135deg, #f6f7f9 0%, #eceef2 50%, #dcfce7 100%);
     }
-    .product-card:hover { transform: translateY(-4px); }
-    .category-card:hover { transform: scale(1.03); }
+    .category-card:hover { transform: translateY(-4px); }
   </style>
 </head>
 <body class="bg-white text-pick-900">
@@ -54,7 +53,6 @@
   <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-pick-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex items-center justify-between h-16">
-        <!-- Logo -->
         <a href="#" class="flex items-center gap-2">
           <div class="w-8 h-8 bg-fresh-500 rounded-lg flex items-center justify-center">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,7 +62,6 @@
           <span class="text-xl font-bold tracking-tight">Pick-up <span class="text-fresh-600">27</span></span>
         </a>
 
-        <!-- Search Bar -->
         <div class="hidden md:flex flex-1 max-w-xl mx-8">
           <div class="relative w-full">
             <input 
@@ -78,82 +75,58 @@
           </div>
         </div>
 
-        <!-- Right Actions -->
         <div class="flex items-center gap-4">
-          <!-- Mobile Search -->
           <button class="md:hidden p-2 text-pick-500 hover:text-pick-800">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>
           </button>
-          <!-- Favorites -->
           <button class="hidden sm:flex p-2 text-pick-500 hover:text-pick-800 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
             </svg>
           </button>
-          <!-- Cart -->
           <button class="relative p-2 text-pick-500 hover:text-pick-800 transition">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
             </svg>
-            <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-fresh-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+            <span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-fresh-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Category Nav -->
     <nav class="border-t border-pick-100">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center gap-1 py-2 overflow-x-auto scrollbar-hide">
           <a href="#" class="px-4 py-1.5 text-sm font-medium text-white bg-fresh-500 rounded-full whitespace-nowrap">Todos</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Frutas</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Verduras</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Lácteos</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Carnes</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Panadería</a>
+          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Frutas y Viandas</a>
+          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Despensa</a>
+          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Lácteos y Huevos</a>
           <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Bebidas</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Congelados</a>
-          <a href="#" class="px-4 py-1.5 text-sm font-medium text-pick-600 hover:bg-pick-50 rounded-full whitespace-nowrap transition">Snacks</a>
         </div>
       </div>
     </nav>
   </header>
 
-  <!-- ========== HERO SECTION ========== -->
+  <!-- ========== HERO ========== -->
   <section class="hero-bg">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20">
       <div class="grid lg:grid-cols-2 gap-10 items-center">
         <div class="space-y-6">
-          <span class="inline-block px-3 py-1 text-xs font-semibold text-fresh-700 bg-fresh-100 rounded-full">Envío gratis en tu primer pedido</span>
           <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight tracking-tight">
-            Frescura que llega <span class="text-fresh-600">a tu puerta</span>
+            Tu mercado, <span class="text-fresh-600">listo para recoger</span>
           </h1>
           <p class="text-lg text-pick-500 max-w-md leading-relaxed">
-            El mejor mercado en línea. Productos frescos, seleccionados con cuidado y entregados el mismo día.
+            Productos frescos y seleccionados con cuidado. Haz tu pedido y pásalo a recoger en Pick-up 27.
           </p>
           <div class="flex flex-wrap gap-3">
-            <a href="#productos" class="px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-              Ver productos
+            <a href="#categorias" class="px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
+              Ver categorías
             </a>
-            <a href="#ofertas" class="px-6 py-3 bg-white text-pick-700 font-medium rounded-full border border-pick-200 hover:bg-pick-50 transition">
-              Ver ofertas de hoy
+            <a href="#" class="px-6 py-3 bg-white text-pick-700 font-medium rounded-full border border-pick-200 hover:bg-pick-50 transition">
+              Hacer pedido
             </a>
-          </div>
-          <div class="flex items-center gap-6 pt-4 text-sm text-pick-500">
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5 text-fresh-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <span>Productos frescos</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <svg class="w-5 h-5 text-fresh-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-              </svg>
-              <span>Entrega el mismo día</span>
-            </div>
           </div>
         </div>
         <div class="relative">
@@ -164,396 +137,92 @@
               alt="Canasta de frutas y verduras frescas" 
               class="relative w-full h-full object-cover rounded-3xl shadow-2xl"
             >
-            <!-- Floating badge -->
-            <div class="absolute -bottom-4 -left-4 bg-white rounded-2xl p-4 shadow-xl">
-              <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-fresh-100 rounded-full flex items-center justify-center">
-                  <svg class="w-5 h-5 text-fresh-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                  </svg>
-                </div>
-                <div>
-                  <p class="text-xs text-pick-400">Entrega</p>
-                  <p class="text-sm font-semibold text-pick-800">En 90 min</p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ========== CATEGORÍAS DESTACADAS ========== -->
-  <section class="py-12 bg-white">
+  <!-- ========== CATEGORÍAS ========== -->
+  <section id="categorias" class="py-12 bg-white">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <h2 class="text-2xl font-bold text-pick-900 mb-8">Compra por categoría</h2>
-      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        <!-- Category items -->
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🍎</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Frutas</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🥬</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Verduras</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🥛</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Lácteos</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🥩</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Carnes</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🍞</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Panadería</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🥤</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Bebidas</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🧊</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Congelados</span>
-        </a>
-        <a href="#" class="category-card group flex flex-col items-center gap-3 p-4 rounded-2xl bg-pick-50 hover:bg-fresh-50 transition text-center">
-          <div class="w-14 h-14 rounded-full bg-white shadow-sm flex items-center justify-center group-hover:shadow-md transition">
-            <span class="text-2xl">🍿</span>
-          </div>
-          <span class="text-sm font-medium text-pick-700">Snacks</span>
-        </a>
+      <div class="mb-8">
+        <h2 class="text-2xl font-bold text-pick-900">Categorías</h2>
       </div>
-    </div>
-  </section>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-  <!-- ========== OFERTAS DESTACADAS ========== -->
-  <section id="ofertas" class="py-12 bg-pick-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h2 class="text-2xl font-bold text-pick-900">Ofertas de hoy</h2>
-          <p class="text-sm text-pick-500 mt-1">Aprovecha antes de que terminen</p>
-        </div>
-        <a href="#" class="text-sm font-medium text-fresh-600 hover:text-fresh-700 flex items-center gap-1">
-          Ver todas
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
+        <a href="#" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition">
+          <div class="aspect-[4/3] sm:aspect-[16/9]">
+            <img 
+              src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&h=450&fit=crop" 
+              alt="Frutas y Viandas" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+          </div>
+          <div class="absolute bottom-0 left-0 right-0 p-6">
+            <h3 class="text-2xl font-bold text-white mb-1">Frutas y Viandas</h3>
+          </div>
         </a>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Product Card 1 -->
-        <div class="product-card bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <span class="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">-20%</span>
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=400&h=400&fit=crop" alt="Manzanas" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          </div>
-          <h3 class="font-medium text-pick-900 mb-1">Manzana Roja</h3>
-          <p class="text-xs text-pick-400 mb-3">1 kg</p>
-          <div class="flex items-end justify-between">
-            <div>
-              <span class="text-lg font-bold text-pick-900">$2.40</span>
-              <span class="text-sm text-pick-400 line-through ml-1">$3.00</span>
-            </div>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
-          </div>
-        </div>
 
-        <!-- Product Card 2 -->
-        <div class="product-card bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <span class="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">-15%</span>
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=400&h=400&fit=crop" alt="Leche" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+        <a href="#" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition">
+          <div class="aspect-[4/3] sm:aspect-[16/9]">
+            <img 
+              src="https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?w=800&h=450&fit=crop" 
+              alt="Despensa" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
           </div>
-          <h3 class="font-medium text-pick-900 mb-1">Leche Entera</h3>
-          <p class="text-xs text-pick-400 mb-3">1 L</p>
-          <div class="flex items-end justify-between">
-            <div>
-              <span class="text-lg font-bold text-pick-900">$1.70</span>
-              <span class="text-sm text-pick-400 line-through ml-1">$2.00</span>
-            </div>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
+          <div class="absolute bottom-0 left-0 right-0 p-6">
+            <h3 class="text-2xl font-bold text-white mb-1">Despensa</h3>
           </div>
-        </div>
-
-        <!-- Product Card 3 -->
-        <div class="product-card bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <span class="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">-25%</span>
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1607623814075-e51df1bd6566?w=400&h=400&fit=crop" alt="Pan" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          </div>
-          <h3 class="font-medium text-pick-900 mb-1">Pan Artesanal</h3>
-          <p class="text-xs text-pick-400 mb-3">500 g</p>
-          <div class="flex items-end justify-between">
-            <div>
-              <span class="text-lg font-bold text-pick-900">$2.25</span>
-              <span class="text-sm text-pick-400 line-through ml-1">$3.00</span>
-            </div>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <!-- Product Card 4 -->
-        <div class="product-card bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <span class="absolute top-3 left-3 px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-lg">-10%</span>
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1588165173638-59b6a39da5ee?w=400&h=400&fit=crop" alt="Yogurt" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          </div>
-          <h3 class="font-medium text-pick-900 mb-1">Yogurt Natural</h3>
-          <p class="text-xs text-pick-400 mb-3">400 g</p>
-          <div class="flex items-end justify-between">
-            <div>
-              <span class="text-lg font-bold text-pick-900">$1.35</span>
-              <span class="text-sm text-pick-400 line-through ml-1">$1.50</span>
-            </div>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== PRODUCTOS DESTACADOS ========== -->
-  <section id="productos" class="py-12 bg-white">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between mb-8">
-        <div>
-          <h2 class="text-2xl font-bold text-pick-900">Más vendidos</h2>
-          <p class="text-sm text-pick-500 mt-1">Los favoritos de nuestros clientes</p>
-        </div>
-        <a href="#" class="text-sm font-medium text-fresh-600 hover:text-fresh-700 flex items-center gap-1">
-          Ver todos
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-          </svg>
         </a>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Product Card 5 -->
-        <div class="product-card bg-white rounded-2xl p-4 border border-pick-100 hover:border-fresh-200 transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=400&fit=crop" alt="Plátanos" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          </div>
-          <h3 class="font-medium text-pick-900 mb-1">Plátano Cavendish</h3>
-          <p class="text-xs text-pick-400 mb-3">1 kg</p>
-          <div class="flex items-end justify-between">
-            <span class="text-lg font-bold text-pick-900">$1.80</span>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
-          </div>
-        </div>
 
-        <!-- Product Card 6 -->
-        <div class="product-card bg-white rounded-2xl p-4 border border-pick-100 hover:border-fresh-200 transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1573246123716-6b1782bfc499?w=400&h=400&fit=crop" alt="Aguacate" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+        <a href="#" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition">
+          <div class="aspect-[4/3] sm:aspect-[16/9]">
+            <img 
+              src="https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=800&h=450&fit=crop" 
+              alt="Lácteos y Huevos" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
           </div>
-          <h3 class="font-medium text-pick-900 mb-1">Aguacate Hass</h3>
-          <p class="text-xs text-pick-400 mb-3">500 g (3 pzas)</p>
-          <div class="flex items-end justify-between">
-            <span class="text-lg font-bold text-pick-900">$3.50</span>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
+          <div class="absolute bottom-0 left-0 right-0 p-6">
+            <h3 class="text-2xl font-bold text-white mb-1">Lácteos y Huevos</h3>
           </div>
-        </div>
+        </a>
 
-        <!-- Product Card 7 -->
-        <div class="product-card bg-white rounded-2xl p-4 border border-pick-100 hover:border-fresh-200 transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1603569283847-aa295f0d016a?w=400&h=400&fit=crop" alt="Huevos" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+        <a href="#" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition">
+          <div class="aspect-[4/3] sm:aspect-[16/9]">
+            <img 
+              src="https://images.unsplash.com/photo-1625772299848-3915133f8d1b?w=800&h=450&fit=crop" 
+              alt="Bebidas" 
+              class="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+            >
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
           </div>
-          <h3 class="font-medium text-pick-900 mb-1">Huevos Frescos</h3>
-          <p class="text-xs text-pick-400 mb-3">12 pzas</p>
-          <div class="flex items-end justify-between">
-            <span class="text-lg font-bold text-pick-900">$2.90</span>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
+          <div class="absolute bottom-0 left-0 right-0 p-6">
+            <h3 class="text-2xl font-bold text-white mb-1">Bebidas</h3>
           </div>
-        </div>
+        </a>
 
-        <!-- Product Card 8 -->
-        <div class="product-card bg-white rounded-2xl p-4 border border-pick-100 hover:border-fresh-200 transition group">
-          <div class="relative aspect-square rounded-xl bg-pick-50 mb-4 overflow-hidden">
-            <button class="absolute top-3 right-3 p-1.5 bg-white/80 rounded-full hover:bg-white transition">
-              <svg class="w-4 h-4 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-              </svg>
-            </button>
-            <img src="https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=400&h=400&fit=crop" alt="Especias" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
-          </div>
-          <h3 class="font-medium text-pick-900 mb-1">Cebolla Blanca</h3>
-          <p class="text-xs text-pick-400 mb-3">1 kg</p>
-          <div class="flex items-end justify-between">
-            <span class="text-lg font-bold text-pick-900">$1.20</span>
-            <button class="w-9 h-9 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/30">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ========== BANNER PROMOCIONAL ========== -->
-  <section class="py-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="relative rounded-3xl overflow-hidden bg-pick-900">
-        <div class="absolute inset-0 bg-gradient-to-r from-pick-900 to-pick-800"></div>
-        <div class="absolute right-0 top-0 w-1/2 h-full opacity-10">
-          <svg class="w-full h-full" viewBox="0 0 200 200" fill="none">
-            <circle cx="100" cy="100" r="80" stroke="white" stroke-width="0.5"/>
-            <circle cx="100" cy="100" r="60" stroke="white" stroke-width="0.5"/>
-            <circle cx="100" cy="100" r="40" stroke="white" stroke-width="0.5"/>
-          </svg>
-        </div>
-        <div class="relative px-8 py-12 sm:px-12 sm:py-16 lg:px-16 lg:py-20">
-          <div class="max-w-lg">
-            <span class="inline-block px-3 py-1 text-xs font-semibold text-fresh-800 bg-fresh-400 rounded-full mb-4">Nuevo</span>
-            <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">Cajas de frutas y verduras semanales</h2>
-            <p class="text-pick-300 mb-6 leading-relaxed">Recibe una selección fresca cada semana. Ahorra tiempo y dinero con nuestros packs personalizados.</p>
-            <a href="#" class="inline-flex items-center px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-              Conocer packs
-              <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/>
-              </svg>
-            </a>
-          </div>
-        </div>
       </div>
     </div>
   </section>
 
   <!-- ========== FOOTER ========== -->
   <footer class="bg-pick-50 border-t border-pick-100">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-        <!-- Brand -->
-        <div class="md:col-span-1">
-          <a href="#" class="flex items-center gap-2 mb-4">
-            <div class="w-8 h-8 bg-fresh-500 rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
-              </svg>
-            </div>
-            <span class="text-xl font-bold tracking-tight">Pick-up <span class="text-fresh-600">27</span></span>
-          </a>
-          <p class="text-sm text-pick-500 leading-relaxed">Tu mercado en línea. Frescura, calidad y rapidez en cada pedido.</p>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div class="flex items-center justify-center gap-2 mb-4">
+        <div class="w-6 h-6 bg-fresh-500 rounded-md flex items-center justify-center">
+          <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+          </svg>
         </div>
-        <!-- Links -->
-        <div>
-          <h4 class="font-semibold text-pick-900 mb-4">Categorías</h4>
-          <ul class="space-y-2 text-sm text-pick-500">
-            <li><a href="#" class="hover:text-fresh-600 transition">Frutas y verduras</a></li>
-            <li><a href="#" class="hover:text-fresh-600 transition">Lácteos</a></li>
-            <li><a href="#" class="hover:text-fresh-600 transition">Carnes</a></li>
-            <li><a href="#" class="hover:text-fresh-600 transition">Panadería</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-pick-900 mb-4">Soporte</h4>
-          <ul class="space-y-2 text-sm text-pick-500">
-            <li><a href="#" class="hover:text-fresh-600 transition">Preguntas frecuentes</a></li>
-            <li><a href="#" class="hover:text-fresh-600 transition">Política de envíos</a></li>
-            <li><a href="#" class="hover:text-fresh-600 transition">Devoluciones</a></li>
-            <li><a href="#" class="hover:text-fresh-600 transition">Contacto</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="font-semibold text-pick-900 mb-4">Síguenos</h4>
-          <div class="flex gap-3">
-            <a href="#" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-pick-400 hover:text-fresh-600 hover:shadow-md transition">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            </a>
-            <a href="#" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-pick-400 hover:text-fresh-600 hover:shadow-md transition">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
-            </a>
-            <a href="#" class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-pick-400 hover:text-fresh-600 hover:shadow-md transition">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
-            </a>
-          </div>
-        </div>
+        <span class="text-lg font-bold tracking-tight">Pick-up <span class="text-fresh-600">27</span></span>
       </div>
-      <div class="border-t border-pick-200 mt-10 pt-6 text-center text-sm text-pick-400">
-        <p>© 2026 Pick-up 27. Todos los derechos reservados.</p>
-      </div>
+      <p class="text-center text-sm text-pick-400">© 2026 Pick-up 27</p>
     </div>
   </footer>
 
