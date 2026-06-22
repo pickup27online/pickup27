@@ -34,7 +34,7 @@
     .page-section.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .carousel-track { display: flex; transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    .carousel-slide { min-width: 100%; flex-shrink: 0; }
+    .carousel-slide { width: 100%; flex-shrink: 0; }
     .search-overlay { opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
     .search-overlay.active { opacity: 1; pointer-events: auto; }
     .search-panel { transform: translateY(-20px); transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; opacity: 0; }
@@ -163,9 +163,9 @@
             </div>
           </div>
           <div class="relative">
-            <div class="aspect-[4/3] max-w-2xl mx-auto relative rounded-3xl overflow-hidden shadow-2xl">
+            <div class="aspect-[4/3] max-w-2xl mx-auto relative rounded-3xl overflow-hidden shadow-2xl isolate">
               <div class="absolute inset-0 bg-fresh-200 rounded-full opacity-30 blur-3xl"></div>
-              <div id="heroCarousel" class="relative w-full h-full">
+              <div id="heroCarousel" class="relative w-full h-full overflow-hidden">
                 <div id="carouselTrack" class="carousel-track w-full h-full">
                   <div class="carousel-slide"><img src="carousel/sal.jpg" alt="Sal" class="w-full h-full object-cover"></div>
                   <div class="carousel-slide"><img src="carousel/frijoles.jpg" alt="Frijoles" class="w-full h-full object-cover"></div>
