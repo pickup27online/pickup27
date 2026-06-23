@@ -49,6 +49,10 @@
     .category-card { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease; }
     .category-card:hover { transform: translateY(-4px); }
     .nav-pill { transition: all 0.3s ease; }
+    .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .product-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }
+    .spinner { border: 3px solid #eceef2; border-top: 3px solid #f97316; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="bg-white text-pick-900">
@@ -62,8 +66,8 @@
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="flex-1 flex items-center justify-center p-8">
-      <div class="text-center">
+    <div id="cartItems" class="flex-1 overflow-y-auto p-6">
+      <div class="text-center mt-20">
         <div class="w-20 h-20 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-10 h-10 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
         </div>
@@ -72,6 +76,10 @@
       </div>
     </div>
     <div class="p-6 border-t border-pick-100">
+      <div class="flex items-center justify-between mb-4">
+        <span class="text-pick-500">Total</span>
+        <span id="cartTotal" class="text-xl font-bold text-pick-900">$0</span>
+      </div>
       <button onclick="toggleCart()" class="w-full px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition">
         Seguir comprando
       </button>
@@ -253,19 +261,9 @@
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Frutas y Viandas</h1>
       </div>
     </section>
-    <section class="py-16 sm:py-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="max-w-md mx-auto">
-          <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          </div>
-          <h2 class="text-2xl font-bold text-pick-900 mb-3">Proximamente</h2>
-          <p class="text-pick-500 mb-8">Estamos preparando los productos de esta categoria. Vuelve pronto.</p>
-          <button onclick="showPage('home')" class="inline-flex items-center px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Volver al inicio
-          </button>
-        </div>
+    <section class="py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="products-frutas-y-viandas" class="products-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </section>
   </div>
@@ -279,19 +277,9 @@
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Despensa</h1>
       </div>
     </section>
-    <section class="py-16 sm:py-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="max-w-md mx-auto">
-          <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          </div>
-          <h2 class="text-2xl font-bold text-pick-900 mb-3">Proximamente</h2>
-          <p class="text-pick-500 mb-8">Estamos preparando los productos de esta categoria. Vuelve pronto.</p>
-          <button onclick="showPage('home')" class="inline-flex items-center px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Volver al inicio
-          </button>
-        </div>
+    <section class="py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="products-despensa" class="products-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </section>
   </div>
@@ -305,19 +293,9 @@
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Lacteos y Huevos</h1>
       </div>
     </section>
-    <section class="py-16 sm:py-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="max-w-md mx-auto">
-          <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          </div>
-          <h2 class="text-2xl font-bold text-pick-900 mb-3">Proximamente</h2>
-          <p class="text-pick-500 mb-8">Estamos preparando los productos de esta categoria. Vuelve pronto.</p>
-          <button onclick="showPage('home')" class="inline-flex items-center px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Volver al inicio
-          </button>
-        </div>
+    <section class="py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="products-lacteos-y-huevos" class="products-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </section>
   </div>
@@ -331,19 +309,9 @@
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Bebidas</h1>
       </div>
     </section>
-    <section class="py-16 sm:py-24">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div class="max-w-md mx-auto">
-          <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-          </div>
-          <h2 class="text-2xl font-bold text-pick-900 mb-3">Proximamente</h2>
-          <p class="text-pick-500 mb-8">Estamos preparando los productos de esta categoria. Vuelve pronto.</p>
-          <button onclick="showPage('home')" class="inline-flex items-center px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-            Volver al inicio
-          </button>
-        </div>
+    <section class="py-8 sm:py-12">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div id="products-bebidas" class="products-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
       </div>
     </section>
   </div>
@@ -362,6 +330,14 @@
   </footer>
 
   <script>
+    // ===================== CONFIG =====================
+    const SHEET_ID = '1raknT-nikYGqyeNw5UzU3WqdeCZ0hgvjmy7iiJyhpMg';
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Productos`;
+
+    let allProducts = [];
+    let cart = [];
+
+    // ===================== CART =====================
     function toggleCart() {
       const drawer = document.getElementById('cartDrawer');
       const backdrop = document.getElementById('cartBackdrop');
@@ -370,6 +346,147 @@
       document.body.style.overflow = drawer.classList.contains('open') ? 'hidden' : '';
     }
 
+    function updateCartUI() {
+      const count = cart.reduce((sum, item) => sum + item.qty, 0);
+      const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+      document.getElementById('cartCount').textContent = count;
+      document.getElementById('cartTotal').textContent = '$' + total.toLocaleString();
+
+      const container = document.getElementById('cartItems');
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div class="text-center mt-20">
+            <div class="w-20 h-20 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-10 h-10 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+            </div>
+            <p class="text-pick-500 text-lg mb-2">Tu bolsa esta vacia</p>
+            <p class="text-pick-400 text-sm">Agrega productos para comenzar tu pedido</p>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = cart.map(item => `
+        <div class="flex items-center gap-4 p-4 bg-pick-50 rounded-2xl mb-3">
+          <div class="w-16 h-16 bg-pick-200 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <img src="stock/${item.image}" alt="${item.name}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-medium text-pick-900 truncate">${item.name}</h4>
+            <p class="text-sm text-pick-500">$${item.price.toLocaleString()} / ${item.unit}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="changeQty('${item.id}', -1)" class="w-8 h-8 rounded-full bg-white border border-pick-200 flex items-center justify-center text-pick-600 hover:bg-pick-100">−</button>
+            <span class="w-6 text-center font-medium">${item.qty}</span>
+            <button onclick="changeQty('${item.id}', 1)" class="w-8 h-8 rounded-full bg-white border border-pick-200 flex items-center justify-center text-pick-600 hover:bg-pick-100">+</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function addToCart(id, name, price, unit, image) {
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.qty++;
+      } else {
+        cart.push({ id, name, price: parseInt(price), unit, image, qty: 1 });
+      }
+      updateCartUI();
+      const btn = document.getElementById('cartCount');
+      btn.classList.add('scale-125');
+      setTimeout(() => btn.classList.remove('scale-125'), 200);
+    }
+
+    function changeQty(id, delta) {
+      const item = cart.find(i => i.id === id);
+      if (!item) return;
+      item.qty += delta;
+      if (item.qty <= 0) {
+        cart = cart.filter(i => i.id !== id);
+      }
+      updateCartUI();
+    }
+
+    // ===================== PRODUCTS FROM SHEETS =====================
+    async function loadProducts() {
+      try {
+        const res = await fetch(SHEET_URL);
+        const text = await res.text();
+        const json = JSON.parse(text.substring(47).slice(0, -2));
+        const rows = json.table.rows;
+        const cols = json.table.cols.map(c => c.label);
+
+        allProducts = rows.map(row => {
+          const obj = {};
+          row.c.forEach((cell, i) => {
+            obj[cols[i]] = cell ? cell.v : '';
+          });
+          return obj;
+        }).filter(p => p.ID && p.ID !== 'ID');
+
+        renderCategory('frutas-y-viandas', 'Frutas y Viandas');
+        renderCategory('despensa', 'Despensa');
+        renderCategory('lacteos-y-huevos', 'Lacteos y Huevos');
+        renderCategory('bebidas', 'Bebidas');
+      } catch (e) {
+        console.error('Error cargando productos:', e);
+        document.querySelectorAll('.products-grid').forEach(grid => {
+          grid.innerHTML = `
+            <div class="col-span-full text-center py-12">
+              <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              </div>
+              <p class="text-pick-500">No se pudieron cargar los productos.</p>
+              <p class="text-pick-400 text-sm mt-1">Verifica tu conexion a internet.</p>
+            </div>`;
+        });
+      }
+    }
+
+    function renderCategory(pageId, categoryName) {
+      const grid = document.getElementById('products-' + pageId);
+      if (!grid) return;
+
+      const products = allProducts.filter(p => p.Categoria === categoryName && p.Disponibilidad === 'Sí');
+
+      if (products.length === 0) {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+            </div>
+            <h2 class="text-2xl font-bold text-pick-900 mb-3">Proximamente</h2>
+            <p class="text-pick-500 mb-8">Estamos preparando los productos de esta categoria. Vuelve pronto.</p>
+            <button onclick="showPage('home')" class="inline-flex items-center px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
+              <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+              Volver al inicio
+            </button>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = products.map(p => `
+        <div class="product-card bg-white rounded-2xl border border-pick-100 overflow-hidden">
+          <div class="aspect-square bg-pick-100 relative">
+            <img src="stock/${p.Imagen}" alt="${p.Nombre}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-pick-400\'>${p.Nombre}</div>'">
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-pick-900 mb-1">${p.Nombre}</h3>
+            <p class="text-sm text-pick-500 mb-3 line-clamp-2">${p.Descripcion || ''}</p>
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-lg font-bold text-fresh-600">$${parseInt(p.Precio).toLocaleString()}</span>
+                <span class="text-sm text-pick-400">/${p.Unidad}</span>
+              </div>
+              <button onclick="addToCart('${p.ID}', '${p.Nombre.replace(/'/g, "\'")}', ${p.Precio}, '${p.Unidad}', '${p.Imagen}')" class="w-10 h-10 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ===================== NAVIGATION =====================
     function showPage(pageName) {
       document.querySelectorAll('.page-section').forEach(section => {
         section.classList.remove('active');
@@ -427,6 +544,7 @@
       }
     }
 
+    // ===================== CAROUSEL =====================
     const track = document.getElementById('carouselTrack');
     const dots = document.querySelectorAll('.carousel-dot');
     let currentSlide = 0;
@@ -464,6 +582,7 @@
 
     updateCarousel();
 
+    // ===================== FADE IN OBSERVER =====================
     const fadeElements = document.querySelectorAll('.fade-in');
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -472,8 +591,10 @@
         }
       });
     }, { threshold: 0.1 });
-
     fadeElements.forEach(el => observer.observe(el));
+
+    // ===================== INIT =====================
+    loadProducts();
   </script>
 
 </body>
