@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pick-up 27</title>
+  <link rel="preload" as="image" href="carousel/sal.webp" type="image/webp">
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <script>
@@ -163,17 +164,17 @@
             </div>
           </div>
           <div class="relative">
-            <div class="aspect-[4/3] max-w-2xl mx-auto relative rounded-3xl overflow-hidden shadow-2xl isolate">
+            <div class="aspect-[4/3] max-w-2xl mx-auto relative rounded-3xl overflow-hidden shadow-2xl isolate bg-pick-100">
               <div class="absolute inset-0 bg-fresh-200 rounded-full opacity-30 blur-3xl"></div>
               <div id="heroCarousel" class="relative w-full h-full overflow-hidden">
                 <div id="carouselTrack" class="carousel-track w-full h-full">
-                  <div class="carousel-slide"><img src="carousel/sal.jpg" alt="Sal" class="w-full h-full object-cover"></div>
-                  <div class="carousel-slide"><img src="carousel/frijoles.jpg" alt="Frijoles" class="w-full h-full object-cover"></div>
-                  <div class="carousel-slide"><img src="carousel/cafe.jpg" alt="Cafe" class="w-full h-full object-cover"></div>
-                  <div class="carousel-slide"><img src="carousel/arroz.jpg" alt="Arroz" class="w-full h-full object-cover"></div>
-                  <div class="carousel-slide"><img src="carousel/recortería.jpg" alt="Recortería" class="w-full h-full object-cover"></div>
-                  <div class="carousel-slide"><img src="carousel/carne.jpg" alt="Carne" class="w-full h-full object-cover"></div>
-                  <div class="carousel-slide"><img src="carousel/botellas-agua.jpg" alt="Botellas de agua selladas" class="w-full h-full object-cover"></div>
+                  <div class="carousel-slide"><img src="carousel/sal.webp" alt="Sal" class="w-full h-full object-cover" loading="eager" fetchpriority="high"></div>
+                  <div class="carousel-slide"><img src="carousel/frijoles.webp" alt="Frijoles" class="w-full h-full object-cover" loading="eager"></div>
+                  <div class="carousel-slide"><img src="carousel/cafe.webp" alt="Cafe" class="w-full h-full object-cover" loading="eager"></div>
+                  <div class="carousel-slide"><img src="carousel/arroz.webp" alt="Arroz" class="w-full h-full object-cover" loading="eager"></div>
+                  <div class="carousel-slide"><img src="carousel/recortería.webp" alt="Recortería" class="w-full h-full object-cover" loading="eager"></div>
+                  <div class="carousel-slide"><img src="carousel/carne.webp" alt="Carne" class="w-full h-full object-cover" loading="eager"></div>
+                  <div class="carousel-slide"><img src="carousel/botellas-agua.webp" alt="Botellas de agua selladas" class="w-full h-full object-cover" loading="eager"></div>
                 </div>
                 <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
                   <button class="carousel-dot w-2 h-2 rounded-full bg-white/60 transition-all duration-300" data-index="0"></button>
@@ -199,8 +200,8 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
           <button onclick="showPage('frutas-y-viandas')" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl text-left fade-in">
-            <div class="aspect-[4/3] sm:aspect-[16/9]">
-              <img src="categories/frutas-viandas.jpg" alt="Frutas y Viandas" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+            <div class="aspect-[4/3] sm:aspect-[16/9] bg-pick-200">
+              <img src="categories/frutas-viandas.webp" alt="Frutas y Viandas" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" loading="lazy">
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
             </div>
             <div class="absolute bottom-0 left-0 right-0 p-6">
@@ -209,8 +210,8 @@
           </button>
 
           <button onclick="showPage('despensa')" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl text-left fade-in">
-            <div class="aspect-[4/3] sm:aspect-[16/9]">
-              <img src="categories/despensa.jpg" alt="Despensa" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+            <div class="aspect-[4/3] sm:aspect-[16/9] bg-pick-200">
+              <img src="categories/despensa.webp" alt="Despensa" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" loading="lazy">
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
             </div>
             <div class="absolute bottom-0 left-0 right-0 p-6">
@@ -219,8 +220,8 @@
           </button>
 
           <button onclick="showPage('lacteos-y-huevos')" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl text-left fade-in">
-            <div class="aspect-[4/3] sm:aspect-[16/9]">
-              <img src="categories/lacteos-huevos.jpg" alt="Lacteos y Huevos" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+            <div class="aspect-[4/3] sm:aspect-[16/9] bg-pick-200">
+              <img src="categories/lacteos-huevos.webp" alt="Lacteos y Huevos" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" loading="lazy">
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
             </div>
             <div class="absolute bottom-0 left-0 right-0 p-6">
@@ -229,8 +230,8 @@
           </button>
 
           <button onclick="showPage('bebidas')" class="category-card group relative rounded-3xl overflow-hidden shadow-sm hover:shadow-xl text-left fade-in">
-            <div class="aspect-[4/3] sm:aspect-[16/9]">
-              <img src="categories/bebidas.jpg" alt="Bebidas" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+            <div class="aspect-[4/3] sm:aspect-[16/9] bg-pick-200">
+              <img src="categories/bebidas.webp" alt="Bebidas" class="w-full h-full object-cover group-hover:scale-105 transition duration-700" loading="lazy">
               <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
             </div>
             <div class="absolute bottom-0 left-0 right-0 p-6">
@@ -245,8 +246,8 @@
 
   <!-- ========== FRUTAS Y VIANDAS PAGE ========== -->
   <div id="page-frutas-y-viandas" class="page-section">
-    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-      <img src="categories/frutas-viandas.jpg" alt="Frutas y Viandas" class="w-full h-full object-cover">
+    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden bg-pick-200">
+      <img src="categories/frutas-viandas.webp" alt="Frutas y Viandas" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
       <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Frutas y Viandas</h1>
@@ -271,8 +272,8 @@
 
   <!-- ========== DESPENSA PAGE ========== -->
   <div id="page-despensa" class="page-section">
-    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-      <img src="categories/despensa.jpg" alt="Despensa" class="w-full h-full object-cover">
+    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden bg-pick-200">
+      <img src="categories/despensa.webp" alt="Despensa" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
       <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Despensa</h1>
@@ -297,8 +298,8 @@
 
   <!-- ========== LACTEOS Y HUEVOS PAGE ========== -->
   <div id="page-lacteos-y-huevos" class="page-section">
-    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-      <img src="categories/lacteos-huevos.jpg" alt="Lacteos y Huevos" class="w-full h-full object-cover">
+    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden bg-pick-200">
+      <img src="categories/lacteos-huevos.webp" alt="Lacteos y Huevos" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
       <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Lacteos y Huevos</h1>
@@ -323,8 +324,8 @@
 
   <!-- ========== BEBIDAS PAGE ========== -->
   <div id="page-bebidas" class="page-section">
-    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden">
-      <img src="categories/bebidas.jpg" alt="Bebidas" class="w-full h-full object-cover">
+    <section class="relative h-64 sm:h-80 lg:h-96 overflow-hidden bg-pick-200">
+      <img src="categories/bebidas.webp" alt="Bebidas" class="w-full h-full object-cover">
       <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
       <div class="absolute bottom-0 left-0 right-0 p-6 sm:p-10 max-w-7xl mx-auto">
         <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">Bebidas</h1>
