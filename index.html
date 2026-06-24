@@ -51,8 +51,6 @@
     .nav-pill { transition: all 0.3s ease; }
     .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .product-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }
-    .spinner { border: 3px solid #eceef2; border-top: 3px solid #f97316; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="bg-white text-pick-900">
@@ -331,8 +329,7 @@
 
   <script>
     // ===================== CONFIG =====================
-    const SHEET_ID = '1raknT-nikYGqyeNw5UzU3WqdeCZ0hgvjmy7iiJyhpMg';
-    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Productos`;
+    const PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpLw6_eqBwy7_zknkW-29rhcK6klQICFVk7rre3fwsD4Fq3qnZ4655gWHjMUxZe9GIHuc7bvXSB9ve/pub?output=tsv';
 
     let allProducts = [];
     let cart = [];
@@ -391,9 +388,9 @@
         cart.push({ id, name, price: parseInt(price), unit, image, qty: 1 });
       }
       updateCartUI();
-      const btn = document.getElementById('cartCount');
-      btn.classList.add('scale-125');
-      setTimeout(() => btn.classList.remove('scale-125'), 200);
+      const badge = document.getElementById('cartCount');
+      badge.style.transform = 'scale(1.4)';
+      setTimeout(() => badge.style.transform = 'scale(1)', 200);
     }
 
     function changeQty(id, delta) {
@@ -406,22 +403,22 @@
       updateCartUI();
     }
 
-    // ===================== PRODUCTS FROM SHEETS =====================
+    // ===================== PRODUCTS FROM SHEETS (TSV) =====================
     async function loadProducts() {
       try {
-        const res = await fetch(SHEET_URL);
-        const text = await res.text();
-        const json = JSON.parse(text.substring(47).slice(0, -2));
-        const rows = json.table.rows;
-        const cols = json.table.cols.map(c => c.label);
+        const res = await fetch(PUB_URL);
+        const tsv = await res.text();
+        const lines = tsv.trim().split('\n');
+        const headers = lines[0].split('\t');
 
-        allProducts = rows.map(row => {
+        allProducts = [];
+        for (let i = 1; i < lines.length; i++) {
+          const cells = lines[i].split('\t');
+          if (!cells[0] || cells[0] === 'ID') continue;
           const obj = {};
-          row.c.forEach((cell, i) => {
-            obj[cols[i]] = cell ? cell.v : '';
-          });
-          return obj;
-        }).filter(p => p.ID && p.ID !== 'ID');
+          headers.forEach((h, j) => { obj[h] = cells[j] || ''; });
+          allProducts.push(obj);
+        }
 
         renderCategory('frutas-y-viandas', 'Frutas y Viandas');
         renderCategory('despensa', 'Despensa');
@@ -429,17 +426,21 @@
         renderCategory('bebidas', 'Bebidas');
       } catch (e) {
         console.error('Error cargando productos:', e);
-        document.querySelectorAll('.products-grid').forEach(grid => {
-          grid.innerHTML = `
-            <div class="col-span-full text-center py-12">
-              <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-              </div>
-              <p class="text-pick-500">No se pudieron cargar los productos.</p>
-              <p class="text-pick-400 text-sm mt-1">Verifica tu conexion a internet.</p>
-            </div>`;
-        });
+        showErrorAll();
       }
+    }
+
+    function showErrorAll() {
+      document.querySelectorAll('.products-grid').forEach(grid => {
+        grid.innerHTML = `
+          <div class="col-span-full text-center py-12">
+            <div class="w-16 h-16 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <p class="text-pick-500">No se pudieron cargar los productos.</p>
+            <p class="text-pick-400 text-sm mt-1">Verifica tu conexion a internet.</p>
+          </div>`;
+      });
     }
 
     function renderCategory(pageId, categoryName) {
@@ -467,7 +468,7 @@
       grid.innerHTML = products.map(p => `
         <div class="product-card bg-white rounded-2xl border border-pick-100 overflow-hidden">
           <div class="aspect-square bg-pick-100 relative">
-            <img src="stock/${p.Imagen}" alt="${p.Nombre}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-pick-400\'>${p.Nombre}</div>'">
+            <img src="stock/${p.Imagen}" alt="${p.Nombre}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-pick-400 text-sm p-4 text-center\'>${p.Nombre}</div>'">
           </div>
           <div class="p-4">
             <h3 class="font-semibold text-pick-900 mb-1">${p.Nombre}</h3>
