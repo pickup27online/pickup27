@@ -329,8 +329,7 @@
 
   <script>
     // ===================== CONFIG =====================
-    // Si tu hoja tiene otro ID, cámbialo aquí:
-    const SHEET_ID = '1raknT-nikYGqyeNw5UzU3WqdeCZ0hgvjmy7iiJyhpMg';
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpLw6_eqBwy7_zknkW-29rhcK6klQICFVk7rre3fwsD4Fq3qnZ4655gWHjMUxZe9GIHuc7bvXSB9ve/pub?output=tsv';
 
     let allProducts = [];
     let cart = [];
@@ -404,18 +403,24 @@
       updateCartUI();
     }
 
-    // ===================== PRODUCTS FROM SHEETS (JSONP - sin CORS) =====================
+    // ===================== PRODUCTS FROM SHEETS (TSV) =====================
     function loadProducts() {
-      // Definir el callback que Google ejecutará
-      window.handleSheetResponse = function(response) {
-        try {
-          const cols = response.table.cols.map(c => c.label);
-          const rows = response.table.rows;
+      fetch(SHEET_URL)
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.text();
+        })
+        .then(text => {
+          const lines = text.split('\n').filter(line => line.trim() !== '');
+          if (lines.length < 2) throw new Error('No data rows found');
 
-          allProducts = rows.map(row => {
+          const headers = lines[0].split('\t').map(h => h.trim());
+
+          allProducts = lines.slice(1).map(line => {
+            const cols = line.split('\t');
             const obj = {};
-            row.c.forEach((cell, i) => {
-              obj[cols[i]] = cell ? cell.v : '';
+            headers.forEach((header, index) => {
+              obj[header] = cols[index] ? cols[index].trim() : '';
             });
             return obj;
           }).filter(p => p.ID && p.ID !== 'ID' && p.ID !== '' && p.Disponibilidad === 'Sí');
@@ -424,28 +429,11 @@
           renderCategory('despensa', 'Despensa');
           renderCategory('lacteos-y-huevos', 'Lacteos y Huevos');
           renderCategory('bebidas', 'Bebidas');
-        } catch (e) {
-          console.error('Error parseando datos:', e);
+        })
+        .catch(error => {
+          console.error('Error cargando productos:', error);
           showErrorAll();
-        }
-      };
-
-      // Crear script tag para JSONP (evade CORS completamente)
-      const script = document.createElement('script');
-      script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Productos&callback=handleSheetResponse`;
-      script.onerror = function() {
-        console.error('No se pudo cargar el script de Sheets');
-        showErrorAll();
-      };
-
-      // Timeout de seguridad: si en 10 segundos no carga, mostrar error
-      setTimeout(() => {
-        if (allProducts.length === 0) {
-          showErrorAll();
-        }
-      }, 10000);
-
-      document.head.appendChild(script);
+        });
     }
 
     function showErrorAll() {
