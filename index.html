@@ -329,7 +329,7 @@
 
   <script>
     // ===================== CONFIG =====================
-    const PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRpLw6_eqBwy7_zknkW-29rhcK6klQICFVk7rre3fwsD4Fq3qnZ4655gWHjMUxZe9GIHuc7bvXSB9ve/pub?output=tsv';
+    const SHEET_ID = '1raknT-nikYGqyeNw5UzU3WqdeCZ0hgvjmy7iiJyhpMg';
 
     let allProducts = [];
     let cart = [];
@@ -403,31 +403,48 @@
       updateCartUI();
     }
 
-    // ===================== PRODUCTS FROM SHEETS (TSV) =====================
-    async function loadProducts() {
-      try {
-        const res = await fetch(PUB_URL);
-        const tsv = await res.text();
-        const lines = tsv.trim().split('\n');
-        const headers = lines[0].split('\t');
+    // ===================== PRODUCTS FROM SHEETS (JSONP - CORS-free) =====================
+    function loadProducts() {
+      // Definir el callback global que Google ejecutará
+      window.handleSheetResponse = function(response) {
+        try {
+          const cols = response.table.cols.map(c => c.label);
+          const rows = response.table.rows;
 
-        allProducts = [];
-        for (let i = 1; i < lines.length; i++) {
-          const cells = lines[i].split('\t');
-          if (!cells[0] || cells[0] === 'ID') continue;
-          const obj = {};
-          headers.forEach((h, j) => { obj[h] = cells[j] || ''; });
-          allProducts.push(obj);
+          allProducts = rows.map(row => {
+            const obj = {};
+            row.c.forEach((cell, i) => {
+              obj[cols[i]] = cell ? cell.v : '';
+            });
+            return obj;
+          }).filter(p => p.ID && p.ID !== 'ID' && p.ID !== '');
+
+          renderCategory('frutas-y-viandas', 'Frutas y Viandas');
+          renderCategory('despensa', 'Despensa');
+          renderCategory('lacteos-y-huevos', 'Lacteos y Huevos');
+          renderCategory('bebidas', 'Bebidas');
+        } catch (e) {
+          console.error('Error parseando datos:', e);
+          showErrorAll();
         }
+      };
 
-        renderCategory('frutas-y-viandas', 'Frutas y Viandas');
-        renderCategory('despensa', 'Despensa');
-        renderCategory('lacteos-y-huevos', 'Lacteos y Huevos');
-        renderCategory('bebidas', 'Bebidas');
-      } catch (e) {
-        console.error('Error cargando productos:', e);
+      // Crear script tag para JSONP (evade CORS completamente)
+      const script = document.createElement('script');
+      script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Productos&callback=handleSheetResponse`;
+      script.onerror = function() {
+        console.error('No se pudo cargar el script de Sheets');
         showErrorAll();
-      }
+      };
+
+      // Timeout de seguridad: si en 10 segundos no carga, mostrar error
+      setTimeout(() => {
+        if (allProducts.length === 0) {
+          showErrorAll();
+        }
+      }, 10000);
+
+      document.head.appendChild(script);
     }
 
     function showErrorAll() {
