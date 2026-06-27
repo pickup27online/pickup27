@@ -51,20 +51,82 @@
     .nav-pill { transition: all 0.3s ease; }
     .product-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .product-card:hover { transform: translateY(-2px); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.1); }
+
+    /* Quick Add Menu */
+    .quick-add-menu {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 10px 40px -10px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      opacity: 0;
+      transform: scale(0.8) translateY(10px);
+      pointer-events: none;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 20;
+    }
+    .quick-add-menu.open {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+    .quick-add-btn {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .quick-add-btn:active { transform: scale(0.9); }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #343948;
+      color: white;
+      padding: 0.875rem 1.5rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      box-shadow: 0 10px 40px -10px rgba(0,0,0,0.3);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
   </style>
 </head>
 <body class="bg-white text-pick-900">
 
+  <!-- Toast -->
+  <div id="toast" class="toast">Producto agregado a tu bolsa</div>
+
   <!-- ========== CART DRAWER ========== -->
   <div id="cartBackdrop" class="cart-backdrop fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm" onclick="toggleCart()"></div>
-  <div id="cartDrawer" class="cart-drawer fixed top-0 right-0 z-[80] h-full w-full max-w-md bg-white shadow-2xl flex flex-col">
+  <div id="cartDrawer" class="cart-drawer fixed top-0 right-0 z-[80] h-full w-full max-w-md bg-white shadow-2xl flex flex-col" style="user-select: none; -webkit-user-select: none;">
     <div class="flex items-center justify-between p-6 border-b border-pick-100">
       <h2 class="text-xl font-bold text-pick-900">Tu bolsa</h2>
       <button onclick="toggleCart()" class="p-2 text-pick-400 hover:text-pick-700 transition">
         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
       </button>
     </div>
-    <div id="cartItems" class="flex-1 overflow-y-auto p-6">
+    <div id="cartItems" class="flex-1 overflow-y-auto p-6" style="user-select: none; -webkit-user-select: none;">
       <div class="text-center mt-20">
         <div class="w-20 h-20 bg-pick-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <svg class="w-10 h-10 text-pick-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
@@ -73,10 +135,10 @@
         <p class="text-pick-400 text-sm">Agrega productos para comenzar tu pedido</p>
       </div>
     </div>
-    <div class="p-6 border-t border-pick-100">
+    <div class="p-6 border-t border-pick-100" style="user-select: none; -webkit-user-select: none;">
       <div class="flex items-center justify-between mb-4">
         <span class="text-pick-500">Total</span>
-        <span id="cartTotal" class="text-xl font-bold text-pick-900">$0</span>
+        <span id="cartTotal" class="text-xl font-bold text-pick-900">cup 0</span>
       </div>
       <button onclick="toggleCart()" class="w-full px-6 py-3 bg-fresh-500 text-white font-medium rounded-full hover:bg-fresh-600 transition">
         Seguir comprando
@@ -335,13 +397,89 @@
 
     let allProducts = [];
     let cart = [];
+    let openQuickAddId = null;
 
-    // Fallback local: si Google Sheets falla, estos productos aparecen igual
+    // Fallback local
     const FALLBACK_PRODUCTS = [
       { ID: 'arroz-tiacata', Nombre: 'Arroz Tia Cata', Categoria: 'Despensa', Precio: '580', Unidad: '1kg', Disponibilidad: 'Si', Imagen: 'arroztiacata.webp', Descripcion: 'Arroz de grano largo y alta calidad, cosechado y producido en Madrid, España.' },
       { ID: 'frijol-campo-negro', Nombre: 'Frijol negro Del Campo', Categoria: 'Despensa', Precio: '700', Unidad: '1lb', Disponibilidad: 'Si', Imagen: 'frijolnegrodelcampo.webp', Descripcion: '' },
       { ID: 'frijol-campo-colorado', Nombre: 'Frijol colorado Del Campo', Categoria: 'Despensa', Precio: '780', Unidad: '1lb', Disponibilidad: 'Si', Imagen: 'frijolcoloradodelcampo.webp', Descripcion: '' }
     ];
+
+    // ===================== TOAST =====================
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // ===================== QUICK ADD =====================
+    function openQuickAdd(id, name, price, unit, image) {
+      // Close any open menu first
+      if (openQuickAddId && openQuickAddId !== id) {
+        closeQuickAdd(openQuickAddId);
+      }
+      openQuickAddId = id;
+
+      const menu = document.getElementById('quick-add-' + id);
+      if (!menu) return;
+
+      // Reset quantity to 1
+      const qtyEl = document.getElementById('quick-qty-' + id);
+      if (qtyEl) qtyEl.textContent = '1';
+
+      menu.classList.add('open');
+    }
+
+    function closeQuickAdd(id) {
+      const menu = document.getElementById('quick-add-' + id);
+      if (menu) menu.classList.remove('open');
+      if (openQuickAddId === id) openQuickAddId = null;
+    }
+
+    function closeAllQuickAdd() {
+      if (openQuickAddId) {
+        closeQuickAdd(openQuickAddId);
+      }
+    }
+
+    function changeQuickQty(id, delta) {
+      const qtyEl = document.getElementById('quick-qty-' + id);
+      if (!qtyEl) return;
+      let qty = parseInt(qtyEl.textContent) || 1;
+      qty += delta;
+      if (qty < 1) qty = 1;
+      qtyEl.textContent = qty;
+    }
+
+    function confirmQuickAdd(id, name, price, unit, image) {
+      const qtyEl = document.getElementById('quick-qty-' + id);
+      const qty = parseInt(qtyEl ? qtyEl.textContent : '1') || 1;
+
+      const existing = cart.find(item => item.id === id);
+      if (existing) {
+        existing.qty += qty;
+      } else {
+        cart.push({ id, name, price: parseInt(price), unit, image, qty: qty });
+      }
+      updateCartUI();
+      closeQuickAdd(id);
+
+      // Animate badge
+      const badge = document.getElementById('cartCount');
+      badge.style.transform = 'scale(1.4)';
+      setTimeout(() => badge.style.transform = 'scale(1)', 200);
+
+      showToast(qty + 'x ' + name + ' agregado a tu bolsa');
+    }
+
+    // Close quick add when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.quick-add-wrapper')) {
+        closeAllQuickAdd();
+      }
+    });
 
     // ===================== CART =====================
     function toggleCart() {
@@ -356,7 +494,7 @@
       const count = cart.reduce((sum, item) => sum + item.qty, 0);
       const total = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
       document.getElementById('cartCount').textContent = count;
-      document.getElementById('cartTotal').textContent = '$' + total.toLocaleString();
+      document.getElementById('cartTotal').textContent = 'cup ' + total.toLocaleString();
 
       const container = document.getElementById('cartItems');
       if (cart.length === 0) {
@@ -378,7 +516,7 @@
           </div>
           <div class="flex-1 min-w-0">
             <h4 class="font-medium text-pick-900 truncate">${item.name}</h4>
-            <p class="text-sm text-pick-500">$${item.price.toLocaleString()} / ${item.unit}</p>
+            <p class="text-sm text-pick-500">cup ${item.price.toLocaleString()} / ${item.unit}</p>
           </div>
           <div class="flex items-center gap-2">
             <button onclick="changeQty('${item.id}', -1)" class="w-8 h-8 rounded-full bg-white border border-pick-200 flex items-center justify-center text-pick-600 hover:bg-pick-100">−</button>
@@ -464,7 +602,6 @@
 
     // ===================== PRODUCTS FROM SHEETS (CSV) =====================
     function loadProducts() {
-      // Try direct first, then proxy, then fallback
       tryFetch(SHEET_URL_DIRECT)
         .then(text => processProducts(text))
         .catch(() => {
@@ -556,19 +693,27 @@
         return `
         <div class="product-card bg-white rounded-2xl border border-pick-100 overflow-hidden">
           <div class="aspect-square bg-pick-100 relative">
-            <img src="stock/${p.Imagen}" alt="${p.Nombre}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-pick-400 text-sm p-4 text-center\'>${p.Nombre}</div>'">
+            <img src="stock/${p.Imagen}" alt="${p.Nombre}" class="w-full h-full object-cover" onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center text-pick-400 text-sm p-4 text-center\'>${p.Nombre}</div>'">
           </div>
           <div class="p-4">
             <h3 class="font-semibold text-pick-900 mb-1">${p.Nombre}</h3>
             <p class="text-sm text-pick-500 mb-3 line-clamp-2">${p.Descripcion || ''}</p>
-            <div class="flex items-center justify-between">
+            <div class="flex items-center justify-between relative">
               <div>
-                <span class="text-lg font-bold text-fresh-600">$${parseInt(p.Precio).toLocaleString()}</span>
+                <span class="text-lg font-bold text-fresh-600">cup ${parseInt(p.Precio).toLocaleString()}</span>
                 <span class="text-sm text-pick-400">/${p.Unidad}</span>
               </div>
-              <button onclick="addToCart('${p.ID}', '${safeName}', ${p.Precio}, '${p.Unidad}', '${p.Imagen}')" class="w-10 h-10 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-              </button>
+              <div class="quick-add-wrapper relative">
+                <button onclick="openQuickAdd('${p.ID}', '${safeName}', ${p.Precio}, '${p.Unidad}', '${p.Imagen}')" class="w-10 h-10 bg-fresh-500 text-white rounded-full flex items-center justify-center hover:bg-fresh-600 transition shadow-lg shadow-fresh-500/25">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
+                <div id="quick-add-${p.ID}" class="quick-add-menu">
+                  <button onclick="changeQuickQty('${p.ID}', -1)" class="quick-add-btn bg-pick-100 text-pick-600 hover:bg-pick-200">−</button>
+                  <span id="quick-qty-${p.ID}" class="w-6 text-center font-semibold text-pick-900">1</span>
+                  <button onclick="changeQuickQty('${p.ID}', 1)" class="quick-add-btn bg-pick-100 text-pick-600 hover:bg-pick-200">+</button>
+                  <button onclick="confirmQuickAdd('${p.ID}', '${safeName}', ${p.Precio}, '${p.Unidad}', '${p.Imagen}')" class="quick-add-btn bg-fresh-500 text-white hover:bg-fresh-600 text-xs px-3 w-auto">Agregar</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
